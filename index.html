@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f1117">
+<title>JRP Gear</title>
+<style>
+:root{--bg:#0f1117;--bg2:#181c27;--bg3:#1e2332;--surface:#242a3a;--surface2:#2c3347;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--text:#f0f2f8;--text2:#8b93a8;--text3:#5c6478;--accent:#e8a030;--accent2:#f0b840;--blue:#4a8fff;--green:#3db87a;--red:#e05555;--yellow:#f0b840;--radius:12px;--radius-sm:8px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;overflow:hidden;}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 12px;padding-top:max(16px,env(safe-area-inset-top));background:var(--bg);border-bottom:0.5px solid var(--border);flex-shrink:0;}
+.topbar-logo{display:flex;align-items:center;gap:8px;}
+.logo-mark{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#0f1117;letter-spacing:-0.5px;}
+.logo-text{font-size:16px;font-weight:600;letter-spacing:-0.3px;}
+.topbar-actions{display:flex;gap:8px;}
+.icon-btn{width:36px;height:36px;border-radius:8px;background:var(--surface);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);font-size:16px;}
+.screen{display:none;flex:1;overflow-y:auto;padding:16px;padding-bottom:90px;}
+.screen.active{display:block;}
+.dash-hero{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.dash-hero-label{font-size:11px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;}
+.dash-hero-value{font-size:36px;font-weight:700;letter-spacing:-1px;color:var(--text);}
+.coverage-bar-wrap{margin-top:16px;}
+.coverage-bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:6px;}
+.coverage-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.coverage-bar-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 0.6s ease;}
+.coverage-bar-fill.over{background:var(--red);}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+.stat-value{font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.stat-value.warn{color:var(--yellow);}
+.stat-value.good{color:var(--green);}
+.stat-value.bad{color:var(--red);}
+.section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;}
+.gap-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;}
+.gap-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;}
+.gap-row:last-child{border-bottom:none;}
+.gap-row-label{color:var(--text2);}
+.gap-row-value{font-weight:600;}
+.ins-questions{background:rgba(228,160,48,0.08);border:0.5px solid rgba(228,160,48,0.3);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;}
+.ins-questions-title{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;}
+.ins-q{font-size:12px;color:var(--text2);line-height:1.5;padding:4px 0;border-bottom:0.5px solid rgba(228,160,48,0.15);}
+.ins-q:last-child{border-bottom:none;}
+.list-filters{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;}
+.filter-pill{flex-shrink:0;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;white-space:nowrap;}
+.filter-pill.active{background:var(--accent);color:#0f1117;border-color:var(--accent);}
+.item-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;}
+.item-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.item-card-name{font-size:15px;font-weight:600;letter-spacing:-0.2px;}
+.item-card-value{font-size:15px;font-weight:700;color:var(--accent);}
+.item-card-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.4px;}
+.badge-cat{background:var(--surface2);color:var(--text2);}
+.badge-needs{background:rgba(240,184,64,0.15);color:var(--yellow);}
+.badge-ok{background:rgba(61,184,122,0.15);color:var(--green);}
+.badge-ai{background:rgba(74,143,255,0.15);color:var(--blue);}
+.badge-manual{background:rgba(228,160,48,0.15);color:var(--accent);}
+.badge-over{background:rgba(224,85,85,0.15);color:var(--red);}
+.badge-retired{background:var(--surface2);color:var(--text3);}
+.empty-state{text-align:center;padding:60px 20px;}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:0.3;}
+.empty-title{font-size:18px;font-weight:600;color:var(--text2);margin-bottom:8px;}
+.empty-sub{font-size:14px;color:var(--text3);}
+.bottomnav{display:flex;background:var(--bg);border-top:0.5px solid var(--border);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border:none;background:transparent;cursor:pointer;color:var(--text3);font-size:10px;font-weight:500;}
+.nav-btn.active{color:var(--accent);}
+.nav-icon{font-size:20px;line-height:1;}
+.nav-btn-add{flex:0 0 56px;margin:-14px 8px 0;}
+.add-circle{width:52px;height:52px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;color:#0f1117;font-weight:300;box-shadow:0 4px 20px rgba(228,160,48,0.35);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:0 0 env(safe-area-inset-bottom);}
+.modal-handle{width:36px;height:4px;background:var(--surface2);border-radius:2px;margin:12px auto 8px;}
+.modal-header{padding:8px 16px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid var(--border);}
+.modal-title{font-size:17px;font-weight:700;letter-spacing:-0.3px;}
+.modal-close{font-size:22px;color:var(--text3);background:none;border:none;cursor:pointer;padding:0;line-height:1;}
+.modal-body{padding:16px;}
+.form-section{margin-bottom:20px;}
+.form-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;}
+.field{margin-bottom:12px;}
+.field label{font-size:12px;color:var(--text2);font-weight:500;display:block;margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;background:var(--surface);border:0.5px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:15px;padding:11px 14px;-webkit-appearance:none;appearance:none;font-family:inherit;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b93a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.field textarea{resize:none;height:80px;line-height:1.5;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mode-toggle{display:flex;background:var(--surface);border-radius:var(--radius-sm);padding:3px;gap:3px;margin-bottom:20px;}
+.mode-btn{flex:1;padding:8px;border-radius:6px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:inherit;}
+.mode-btn.active{background:var(--accent);color:#0f1117;font-weight:600;}
+.submit-btn{width:100%;padding:14px;background:var(--accent);border:none;border-radius:var(--radius);font-size:16px;font-weight:700;color:#0f1117;cursor:pointer;margin-top:8px;font-family:inherit;letter-spacing:-0.2px;}
+.submit-btn:active{opacity:0.85;}
+.submit-btn.secondary{background:var(--surface2);color:var(--text);margin-top:8px;font-weight:500;}
+.ai-block{background:rgba(74,143,255,0.06);border:0.5px solid rgba(74,143,255,0.25);border-radius:var(--radius);padding:14px;margin:12px 0;}
+.ai-block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.ai-block-title{font-size:12px;font-weight:600;color:var(--blue);display:flex;align-items:center;gap:6px;}
+.ai-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid rgba(74,143,255,0.12);}
+.ai-row:last-child{border-bottom:none;}
+.ai-row-label{font-size:12px;color:var(--text2);}
+.ai-row-value{font-size:13px;font-weight:600;}
+.ai-row-value.primary{color:var(--blue);}
+.ai-note{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5;font-style:italic;}
+.ai-confidence{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:0.4px;}
+.conf-high{background:rgba(61,184,122,0.15);color:var(--green);}
+.conf-medium{background:rgba(240,184,64,0.15);color:var(--yellow);}
+.conf-low{background:rgba(224,85,85,0.15);color:var(--red);}
+.ai-fetch-btn{width:100%;padding:11px;background:rgba(74,143,255,0.1);border:0.5px solid rgba(74,143,255,0.3);border-radius:var(--radius-sm);color:var(--blue);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.ai-fetch-btn:active{opacity:0.7;}
+.spinner{width:14px;height:14px;border:2px solid rgba(74,143,255,0.3);border-top-color:var(--blue);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.override-tag{font-size:10px;background:rgba(228,160,48,0.15);color:var(--accent);padding:1px 6px;border-radius:4px;font-weight:600;}
+.detail-block{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:12px;}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-label{color:var(--text2);}
+.detail-value{font-weight:500;text-align:right;max-width:55%;}
+.setup-notice{background:rgba(74,143,255,0.06);border:0.5px solid rgba(74,143,255,0.2);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.setup-notice-title{font-size:13px;font-weight:600;color:var(--blue);margin-bottom:6px;}
+.setup-notice-body{font-size:12px;color:var(--text2);line-height:1.6;}
+.policy-card{background:rgba(228,160,48,0.06);border:0.5px solid rgba(228,160,48,0.2);border-radius:var(--radius);padding:14px;margin-bottom:16px;}
+.policy-title{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-mark">JRP</div>
+      <div><div class="logo-text">Gear Inventory</div></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="openSearch()">🔍</button>
+    </div>
+  </div>
+
+  <div id="screen-dash" class="screen active">
+    <div class="dash-hero">
+      <div class="dash-hero-label">Total replacement value</div>
+      <div class="dash-hero-value" id="total-value">$0</div>
+      <div class="dash-hero-sub">vs. $20,000 photographic equipment limit</div>
+      <div class="coverage-bar-wrap">
+        <div class="coverage-bar-labels"><span>$0</span><span id="coverage-pct">0% of $20K limit</span><span>$20K</span></div>
+        <div class="coverage-bar"><div class="coverage-bar-fill" id="coverage-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Items catalogued</div><div class="stat-value" id="item-count">0</div></div>
+      <div class="stat-card"><div class="stat-label">Needs enrichment</div><div class="stat-value warn" id="needs-enrich">0</div></div>
+      <div class="stat-card"><div class="stat-label">Coverage gap</div><div class="stat-value bad" id="coverage-gap">$20K</div></div>
+      <div class="stat-card"><div class="stat-label">Est. ACV total</div><div class="stat-value" id="acv-total">—</div></div>
+    </div>
+    <div class="section-label">Policy snapshot — 95-J7-H012-9</div>
+    <div class="gap-card">
+      <div class="gap-row"><span class="gap-row-label">Photo equip. limit (FE-8753)</span><span class="gap-row-value">$20,000</span></div>
+      <div class="gap-row"><span class="gap-row-label">Computer property (FE-8743.1)</span><span class="gap-row-value">$25,000</span></div>
+      <div class="gap-row"><span class="gap-row-label">Personal property off-premises</span><span class="gap-row-value">$15,000</span></div>
+      <div class="gap-row"><span class="gap-row-label">Deductible (Inland Marine)</span><span class="gap-row-value">$500</span></div>
+      <div class="gap-row"><span class="gap-row-label">Valuation basis</span><span class="gap-row-value" style="color:var(--red)">ACV (FE-3650)</span></div>
+    </div>
+    <div class="section-label">Open questions for Coriano Johnson</div>
+    <div class="ins-questions">
+      <div class="ins-questions-title">⚠ 4 questions to resolve</div>
+      <div class="ins-q">1. Does ACV (FE-3650) apply to the Inland Marine photographic schedule, or can it be converted to replacement cost?</div>
+      <div class="ins-q">2. Is the $20K photo equipment limit blanket or per-item?</div>
+      <div class="ins-q">3. What qualifies under FE-8753 — does it cover audio, computers, hard drives, bags?</div>
+      <div class="ins-q">4. Is gear covered in transit and at event venues, or only at listed premises?</div>
+    </div>
+  </div>
+
+  <div id="screen-items" class="screen">
+    <div class="list-filters" id="filters">
+      <button class="filter-pill active" onclick="filterItems('all',this)">All</button>
+      <button class="filter-pill" onclick="filterItems('needs',this)">Needs enrichment</button>
+      <button class="filter-pill" onclick="filterItems('Camera bodies',this)">Bodies</button>
+      <button class="filter-pill" onclick="filterItems('Lenses',this)">Lenses</button>
+      <button class="filter-pill" onclick="filterItems('Lighting',this)">Lighting</button>
+      <button class="filter-pill" onclick="filterItems('Computers and storage',this)">Computers</button>
+      <button class="filter-pill" onclick="filterItems('Audio',this)">Audio</button>
+    </div>
+    <div id="items-list"></div>
+  </div>
+
+  <div id="screen-settings" class="screen">
+    <div class="section-label">Connection</div>
+    <div class="setup-notice">
+      <div class="setup-notice-title">Connect Google Sheets backend</div>
+      <div class="setup-notice-body">Paste your Apps Script Web App URL below. Deploy as: Execute as me, access: Anyone. All gear data syncs to your Sheet.</div>
+    </div>
+    <div class="field"><label>Apps Script URL</label><input type="url" id="script-url" placeholder="https://script.google.com/macros/s/..." /></div>
+    <div class="field"><label>Anthropic API Key (stored locally only)</label><input type="password" id="api-key" placeholder="sk-ant-..." /></div>
+    <button class="submit-btn" onclick="saveSettings()">Save connection</button>
+    <div style="height:24px"></div>
+    <div class="section-label">Insurance thresholds</div>
+    <div class="detail-block">
+      <div class="detail-row"><span class="detail-label">High-value flag threshold</span><input type="number" id="threshold" value="500" style="width:80px;text-align:right;background:var(--surface);border:0.5px solid var(--border2);border-radius:6px;color:var(--text);padding:4px 8px;font-size:14px;" /></div>
+      <div class="detail-row"><span class="detail-label">Photo equipment limit</span><span class="detail-value">$20,000</span></div>
+      <div class="detail-row"><span class="detail-label">Computer property limit</span><span class="detail-value">$25,000</span></div>
+    </div>
+    <div style="height:24px"></div>
+    <div class="section-label">Policy</div>
+    <div class="policy-card">
+      <div class="policy-title">State Farm BOP — 95-J7-H012-9</div>
+      <div class="detail-row"><span class="detail-label">Agent</span><span class="detail-value">Coriano Johnson</span></div>
+      <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:3306880703" style="color:var(--accent);text-decoration:none;">330-688-0703</a></span></div>
+      <div class="detail-row"><span class="detail-label">Effective</span><span class="detail-value">Aug 9, 2025 – Aug 9, 2026</span></div>
+      <div class="detail-row"><span class="detail-label">Annual premium</span><span class="detail-value">$388.00</span></div>
+    </div>
+    <div style="height:24px"></div>
+    <div class="section-label">Data</div>
+    <button class="submit-btn secondary" onclick="exportData()">Export inventory as JSON</button>
+    <button class="submit-btn secondary" style="margin-top:8px;color:var(--red);" onclick="clearData()">Clear all local data</button>
+  </div>
+
+  <div class="bottomnav">
+    <button class="nav-btn active" id="nav-dash" onclick="showScreen('dash')"><span class="nav-icon">◉</span><span>Dashboard</span></button>
+    <button class="nav-btn" id="nav-items" onclick="showScreen('items')"><span class="nav-icon">☰</span><span>Inventory</span></button>
+    <button class="nav-btn nav-btn-add" onclick="openAddModal()"><div class="add-circle">+</div></button>
+    <button class="nav-btn" onclick="showScreen('items');setTimeout(()=>filterItems('needs',null),50)"><span class="nav-icon">◈</span><span>Enrich</span></button>
+    <button class="nav-btn" id="nav-settings" onclick="showScreen('settings')"><span class="nav-icon">⚙</span><span>Settings</span></button>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal" id="modal-add-inner">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Add gear item</div>
+      <button class="modal-close" onclick="closeModal('modal-add')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="mode-quick" onclick="setMode('quick')">Quick add</button>
+        <button class="mode-btn" id="mode-enrich" onclick="setMode('enrich')">Full details</button>
+      </div>
+      <div id="quick-fields">
+        <div class="form-section">
+          <div class="field"><label>Item name *</label><input type="text" id="f-name" placeholder="e.g. Sony A7R V body" /></div>
+          <div class="field-row">
+            <div class="field"><label>Category *</label><select id="f-cat"><option value="">Select...</option><option>Camera bodies</option><option>Lenses</option><option>Lighting</option><option>Audio</option><option>Computers and storage</option><option>Memory cards</option><option>Bags and cases</option><option>Tripods and support</option><option>Cables and accessories</option><option>Miscellaneous</option></select></div>
+            <div class="field"><label>Est. replacement value</label><input type="number" id="f-value" placeholder="$" /></div>
+          </div>
+          <div class="field"><label>Status</label><select id="f-status"><option value="active">Active</option><option value="retired">Retired</option><option value="sold">Sold</option><option value="lost">Lost / stolen</option></select></div>
+        </div>
+      </div>
+      <div id="enrich-fields" style="display:none">
+        <div class="form-section">
+          <div class="form-section-title">Identity</div>
+          <div class="field-row">
+            <div class="field"><label>Brand</label><input type="text" id="f-brand" placeholder="Sony, Nikon..." /></div>
+            <div class="field"><label>Model</label><input type="text" id="f-model" placeholder="A7R V..." /></div>
+          </div>
+          <div class="field"><label>Serial number</label><input type="text" id="f-serial" placeholder="Optional" /></div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">AI valuation</div>
+          <button class="ai-fetch-btn" id="ai-btn" onclick="fetchAIValuation()"><span id="ai-btn-icon">✦</span> Get AI valuation</button>
+          <div class="ai-block" id="ai-result-block" style="display:none">
+            <div class="ai-block-header"><div class="ai-block-title">✦ AI estimate</div><div id="ai-confidence-badge"></div></div>
+            <div class="ai-row"><span class="ai-row-label">Original MSRP</span><span class="ai-row-value" id="ai-msrp">—</span></div>
+            <div class="ai-row"><span class="ai-row-label">Current new price</span><span class="ai-row-value primary" id="ai-new">—</span></div>
+            <div class="ai-row"><span class="ai-row-label">Used market value</span><span class="ai-row-value" id="ai-used">—</span></div>
+            <div class="ai-row"><span class="ai-row-label">Item age</span><span class="ai-row-value" id="ai-age">—</span></div>
+            <div class="ai-note" id="ai-note"></div>
+            <button class="submit-btn" style="margin-top:12px;font-size:13px;padding:10px;" onclick="acceptAIValues()">Accept values</button>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Purchase info</div>
+          <div class="field-row">
+            <div class="field"><label>Purchase date</label><input type="date" id="f-purchase-date" /></div>
+            <div class="field"><label>Purchase price</label><input type="number" id="f-purchase-price" placeholder="$" /></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Valuation (manual override)</div>
+          <div class="field-row">
+            <div class="field"><label>Current new value <span class="override-tag">override</span></label><input type="number" id="f-new-val" placeholder="$" /></div>
+            <div class="field"><label>Used market value <span class="override-tag">override</span></label><input type="number" id="f-used-val" placeholder="$" /></div>
+          </div>
+          <div class="field"><label>Original MSRP <span class="override-tag">override</span></label><input type="number" id="f-msrp" placeholder="$" /></div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Location and condition</div>
+          <div class="field"><label>Storage location</label><select id="f-location"><option value="">Unknown</option><option value="home">Home</option><option value="car">Car / vehicle</option><option value="studio">Studio</option><option value="event">Currently at event</option><option value="other">Other</option></select></div>
+          <div class="field"><label>Condition notes</label><textarea id="f-condition" placeholder="Any damage, modifications, or notes relevant to a claim..."></textarea></div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">Depreciation (optional)</div>
+          <div class="field-row">
+            <div class="field"><label>Est. useful life (yrs)</label><input type="number" id="f-life" placeholder="e.g. 5" /></div>
+            <div class="field"><label>Method</label><select id="f-dep-method"><option value="straight-line">Straight-line</option><option value="accelerated">Accelerated</option></select></div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="f-edit-id" value="" />
+      <input type="hidden" id="f-value-source" value="manual" />
+      <button class="submit-btn" onclick="saveItem()">Save item</button>
+    </div>
+  </div>
+</div>
+
+<!-- Item Detail Modal -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="detail-title">Item detail</div>
+      <button class="modal-close" onclick="closeModal('modal-detail')">×</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<script>
+const USEFUL_LIFE={'Camera bodies':4,'Lenses':8,'Lighting':6,'Audio':5,'Computers and storage':3.5,'Memory cards':4,'Bags and cases':7,'Tripods and support':7,'Cables and accessories':5,'Miscellaneous':5};
+const COVERAGE_LIMIT=20000;
+let items=[];
+let currentFilter='all';
+let editingId=null;
+function loadData(){try{items=JSON.parse(localStorage.getItem('jrp_gear')||'[]');}catch(e){items=[];}const s=localStorage.getItem('jrp_settings');if(s){const p=JSON.parse(s);if(p.scriptUrl)document.getElementById('script-url').value=p.scriptUrl;if(p.apiKey)document.getElementById('api-key').value=p.apiKey;if(p.threshold)document.getElementById('threshold').value=p.threshold;}}
+function saveData(){localStorage.setItem('jrp_gear',JSON.stringify(items));}
+function saveSettings(){const s={scriptUrl:document.getElementById('script-url').value,apiKey:document.getElementById('api-key').value,threshold:document.getElementById('threshold').value};localStorage.setItem('jrp_settings',JSON.stringify(s));alert('Settings saved.');}
+function getSettings(){try{return JSON.parse(localStorage.getItem('jrp_settings')||'{}');}catch(e){return{};}}
+function fmt(n){if(!n&&n!==0)return'—';return'$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:0});}
+function showScreen(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));document.getElementById('screen-'+name).classList.add('active');const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');if(name==='dash')updateDashboard();if(name==='items')renderItems();}
+function updateDashboard(){const active=items.filter(i=>i.status==='active');const total=active.reduce((s,i)=>s+(parseFloat(i.replacementValue)||0),0);const needsEnrich=active.filter(i=>!i.enriched).length;const pct=Math.min((total/COVERAGE_LIMIT)*100,100);const gap=Math.max(COVERAGE_LIMIT-total,0);const fill=document.getElementById('coverage-fill');fill.style.width=pct+'%';fill.className='coverage-bar-fill'+(total>COVERAGE_LIMIT?' over':'');document.getElementById('total-value').textContent=fmt(total);document.getElementById('item-count').textContent=active.length;document.getElementById('needs-enrich').textContent=needsEnrich;document.getElementById('coverage-gap').textContent=gap>0?fmt(gap):'Covered';document.getElementById('coverage-gap').className='stat-value '+(gap===0?'good':'bad');document.getElementById('coverage-pct').textContent=Math.round(pct)+'% of $20K limit';const acv=active.reduce((s,i)=>{const v=parseFloat(i.replacementValue)||0;const age=i.itemAge||2;const life=USEFUL_LIFE[i.category]||5;const dep=Math.max(0,1-age/life);return s+v*dep;},0);document.getElementById('acv-total').textContent=fmt(Math.round(acv));}
+function renderItems(){const list=document.getElementById('items-list');let filtered=items.filter(i=>{if(currentFilter==='all')return true;if(currentFilter==='needs')return!i.enriched&&i.status==='active';return i.category===currentFilter;});if(filtered.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-title">No items yet</div><div class="empty-sub">Tap + to add your first gear item</div></div>';return;}const threshold=parseInt(getSettings().threshold||'500');list.innerHTML=filtered.map(item=>{const val=parseFloat(item.replacementValue)||0;const badges=['<span class="badge badge-cat">'+(item.category||'Uncategorized')+'</span>',!item.enriched?'<span class="badge badge-needs">Needs enrichment</span>':'<span class="badge badge-ok">Complete</span>',item.valueSource==='ai'?'<span class="badge badge-ai">AI valued</span>':'',val>=threshold?'<span class="badge badge-over">High value</span>':'',item.status!=='active'?'<span class="badge badge-retired">'+item.status+'</span>':''].filter(Boolean).join('');return'<div class="item-card" onclick="openDetail(\''+item.id+'\')"><div class="item-card-top"><div class="item-card-name">'+item.name+'</div><div class="item-card-value">'+(val?fmt(val):'—')+'</div></div><div class="item-card-meta">'+badges+'</div></div>';}).join('');}
+function filterItems(f,btn){currentFilter=f;document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));if(btn)btn.classList.add('active');renderItems();}
+function openAddModal(prefillId){editingId=prefillId||null;document.getElementById('modal-title').textContent=editingId?'Edit item':'Add gear item';clearForm();if(editingId){const item=items.find(i=>i.id===editingId);if(item)prefillForm(item);setMode('enrich');}document.getElementById('modal-add').classList.add('open');}
+function prefillForm(item){document.getElementById('f-name').value=item.name||'';document.getElementById('f-cat').value=item.category||'';document.getElementById('f-value').value=item.replacementValue||'';document.getElementById('f-status').value=item.status||'active';document.getElementById('f-brand').value=item.brand||'';document.getElementById('f-model').value=item.model||'';document.getElementById('f-serial').value=item.serialNumber||'';document.getElementById('f-purchase-date').value=item.purchaseDate||'';document.getElementById('f-purchase-price').value=item.purchasePrice||'';document.getElementById('f-new-val').value=item.currentNewValue||'';document.getElementById('f-used-val').value=item.usedMarketValue||'';document.getElementById('f-msrp').value=item.originalMSRP||'';document.getElementById('f-location').value=item.storageLocation||'';document.getElementById('f-condition').value=item.conditionNotes||'';document.getElementById('f-life').value=item.usefulLife||'';document.getElementById('f-dep-method').value=item.depMethod||'straight-line';document.getElementById('f-value-source').value=item.valueSource||'manual';document.getElementById('f-edit-id').value=item.id;}
+function clearForm(){['f-name','f-cat','f-value','f-brand','f-model','f-serial','f-purchase-date','f-purchase-price','f-new-val','f-used-val','f-msrp','f-location','f-condition','f-life'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('f-status').value='active';document.getElementById('f-dep-method').value='straight-line';document.getElementById('f-value-source').value='manual';document.getElementById('f-edit-id').value='';document.getElementById('ai-result-block').style.display='none';}
+function setMode(mode){document.getElementById('mode-quick').classList.toggle('active',mode==='quick');document.getElementById('mode-enrich').classList.toggle('active',mode==='enrich');document.getElementById('enrich-fields').style.display=mode==='enrich'?'block':'none';}
+function saveItem(){const name=document.getElementById('f-name').value.trim();const cat=document.getElementById('f-cat').value;if(!name){alert('Item name is required.');return;}const id=editingId||('item_'+Date.now());const existing=editingId?items.find(i=>i.id===id):null;const newVal=parseFloat(document.getElementById('f-new-val').value);const usedVal=parseFloat(document.getElementById('f-used-val').value);const msrp=parseFloat(document.getElementById('f-msrp').value);const replacementValue=parseFloat(document.getElementById('f-value').value)||newVal||usedVal||0;const brand=document.getElementById('f-brand').value.trim();const model=document.getElementById('f-model').value.trim();const isEnrichMode=document.getElementById('mode-enrich').classList.contains('active');const enriched=isEnrichMode&&brand&&model;const item={id,name,category:cat||'Miscellaneous',replacementValue,status:document.getElementById('f-status').value,brand,model,serialNumber:document.getElementById('f-serial').value.trim(),purchaseDate:document.getElementById('f-purchase-date').value,purchasePrice:parseFloat(document.getElementById('f-purchase-price').value)||null,originalMSRP:msrp||null,currentNewValue:newVal||null,usedMarketValue:usedVal||null,valueSource:document.getElementById('f-value-source').value,storageLocation:document.getElementById('f-location').value,conditionNotes:document.getElementById('f-condition').value.trim(),usefulLife:parseFloat(document.getElementById('f-life').value)||USEFUL_LIFE[cat]||5,depMethod:document.getElementById('f-dep-method').value,enriched,dateAdded:existing?existing.dateAdded:new Date().toISOString().split('T')[0],lastUpdated:new Date().toISOString().split('T')[0],itemAge:null};if(item.purchaseDate){const yrs=(new Date()-new Date(item.purchaseDate))/(365.25*24*3600*1000);item.itemAge=Math.round(yrs*10)/10;}if(editingId){const idx=items.findIndex(i=>i.id===editingId);if(idx>-1)items[idx]=item;}else items.unshift(item);saveData();syncToSheet(item);closeModal('modal-add');renderItems();updateDashboard();}
+async function syncToSheet(item){const settings=getSettings();if(!settings.scriptUrl)return;try{await fetch(settings.scriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'upsertItem',item}),headers:{'Content-Type':'application/json'}});}catch(e){console.log('Sync:',e.message);}}
+async function fetchAIValuation(){const brand=document.getElementById('f-brand').value.trim();const model=document.getElementById('f-model').value.trim();const name=document.getElementById('f-name').value.trim();const settings=getSettings();if(!settings.apiKey){alert('Add your Anthropic API key in Settings first.');return;}if(!brand&&!model&&!name){alert('Enter a brand, model, or item name first.');return;}const btn=document.getElementById('ai-btn');btn.disabled=true;btn.innerHTML='<div class="spinner"></div> Getting valuation...';const prompt=`You are a photography gear valuation expert. Research this camera equipment and return a JSON object only, no other text.\n\nItem: ${name||''}\nBrand: ${brand||'unknown'}\nModel: ${model||'unknown'}\n\nReturn this exact JSON structure:\n{"originalMSRP":<number or null>,"currentNewValue":<number or null>,"usedMarketValue":<number or null>,"itemAge":<number in years or null>,"confidence":"high"|"medium"|"low","note":"<brief explanation>"}\n\nFor currentNewValue, use today's approximate price new. For usedMarketValue, reference KEH, eBay sold listings, MPB. Return only the JSON object.`;try{const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':settings.apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});const data=await resp.json();const text=data.content[0].text;const jsonMatch=text.match(/\{[\s\S]*\}/);const val=JSON.parse(jsonMatch[0]);document.getElementById('ai-msrp').textContent=val.originalMSRP?fmt(val.originalMSRP):'—';document.getElementById('ai-new').textContent=val.currentNewValue?fmt(val.currentNewValue):'—';document.getElementById('ai-used').textContent=val.usedMarketValue?fmt(val.usedMarketValue):'—';document.getElementById('ai-age').textContent=val.itemAge?val.itemAge+' yrs':'—';document.getElementById('ai-note').textContent=val.note||'';const confClass=val.confidence==='high'?'conf-high':val.confidence==='medium'?'conf-medium':'conf-low';document.getElementById('ai-confidence-badge').innerHTML='<span class="ai-confidence '+confClass+'">'+val.confidence+'</span>';document.getElementById('ai-result-block').style.display='block';document.getElementById('ai-result-block')._aiData=val;}catch(e){alert('AI valuation failed: '+e.message);}finally{btn.disabled=false;btn.innerHTML='<span id="ai-btn-icon">✦</span> Get AI valuation';}}
+function acceptAIValues(){const block=document.getElementById('ai-result-block');const val=block._aiData;if(!val)return;if(val.originalMSRP)document.getElementById('f-msrp').value=val.originalMSRP;if(val.currentNewValue){document.getElementById('f-new-val').value=val.currentNewValue;document.getElementById('f-value').value=val.currentNewValue;}if(val.usedMarketValue)document.getElementById('f-used-val').value=val.usedMarketValue;document.getElementById('f-value-source').value='ai';}
+function openDetail(id){const item=items.find(i=>i.id===id);if(!item)return;document.getElementById('detail-title').textContent=item.name;const threshold=parseInt(getSettings().threshold||'500');const val=parseFloat(item.replacementValue)||0;const life=item.usefulLife||USEFUL_LIFE[item.category]||5;const age=item.itemAge||0;const bookValue=val*Math.max(0,1-age/life);document.getElementById('detail-body').innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"><span class="badge badge-cat">'+item.category+'</span>'+(item.enriched?'<span class="badge badge-ok">Complete</span>':'<span class="badge badge-needs">Needs enrichment</span>')+(item.valueSource==='ai'?'<span class="badge badge-ai">AI valued</span>':'<span class="badge badge-manual">Manual</span>')+(val>=threshold?'<span class="badge badge-over">High value</span>':'')+(item.status!=='active'?'<span class="badge badge-retired">'+item.status+'</span>':'')+'</div><div class="detail-block"><div class="detail-row"><span class="detail-label">Replacement value</span><span class="detail-value" style="color:var(--accent);font-size:16px;font-weight:700">'+fmt(val)+'</span></div><div class="detail-row"><span class="detail-label">Current used value</span><span class="detail-value">'+fmt(item.usedMarketValue)+'</span></div><div class="detail-row"><span class="detail-label">Original MSRP</span><span class="detail-value">'+fmt(item.originalMSRP)+'</span></div><div class="detail-row"><span class="detail-label">Est. book value (ACV)</span><span class="detail-value">'+fmt(Math.round(bookValue))+'</span></div></div><div class="detail-block"><div class="detail-row"><span class="detail-label">Brand / Model</span><span class="detail-value">'+([item.brand,item.model].filter(Boolean).join(' ')||'—')+'</span></div><div class="detail-row"><span class="detail-label">Serial number</span><span class="detail-value">'+(item.serialNumber||'—')+'</span></div><div class="detail-row"><span class="detail-label">Purchase date</span><span class="detail-value">'+(item.purchaseDate||'—')+'</span></div><div class="detail-row"><span class="detail-label">Purchase price</span><span class="detail-value">'+fmt(item.purchasePrice)+'</span></div><div class="detail-row"><span class="detail-label">Item age</span><span class="detail-value">'+(item.itemAge?item.itemAge+' yrs':'—')+'</span></div></div><div class="detail-block"><div class="detail-row"><span class="detail-label">Storage location</span><span class="detail-value">'+(item.storageLocation||'—')+'</span></div><div class="detail-row"><span class="detail-label">Depreciation method</span><span class="detail-value">'+(item.depMethod||'Straight-line')+'</span></div><div class="detail-row"><span class="detail-label">Useful life</span><span class="detail-value">'+(item.usefulLife||life)+' yrs</span></div><div class="detail-row"><span class="detail-label">Date added</span><span class="detail-value">'+(item.dateAdded||'—')+'</span></div></div>'+(item.conditionNotes?'<div class="detail-block"><div style="font-size:12px;color:var(--text2);line-height:1.6">'+item.conditionNotes+'</div></div>':'')+'<button class="submit-btn" onclick="closeModal(\'modal-detail\');openAddModal(\''+item.id+'\')">Edit item</button><button class="submit-btn secondary" onclick="retireItem(\''+item.id+'\')">Mark as retired</button>';document.getElementById('modal-detail').classList.add('open');}
+function retireItem(id){const item=items.find(i=>i.id===id);if(!item)return;item.status='retired';item.outOfServiceDate=new Date().toISOString().split('T')[0];saveData();closeModal('modal-detail');renderItems();updateDashboard();}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function openSearch(){const q=prompt('Search gear inventory:');if(!q)return;const results=items.filter(i=>i.name.toLowerCase().includes(q.toLowerCase())||(i.brand||'').toLowerCase().includes(q.toLowerCase())||(i.model||'').toLowerCase().includes(q.toLowerCase()));currentFilter='all';showScreen('items');const list=document.getElementById('items-list');if(results.length===0){list.innerHTML='<div class="empty-state"><div class="empty-title">No results for "'+q+'"</div></div>';return;}const orig=items;items=results;renderItems();items=orig;}
+function exportData(){const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jrp_gear_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);}
+function clearData(){if(confirm('Delete ALL local gear data? This cannot be undone.')){items=[];saveData();renderItems();updateDashboard();}}
+loadData();updateDashboard();renderItems();
+</script>
+</body>
+</html>
