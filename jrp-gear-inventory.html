@@ -125,6 +125,25 @@ input,select,textarea{max-width:100%;min-width:0;}
 .setup-notice-body{font-size:12px;color:var(--text2);line-height:1.6;}
 .policy-card{background:rgba(228,160,48,0.06);border:0.5px solid rgba(228,160,48,0.2);border-radius:var(--radius);padding:14px;margin-bottom:16px;}
 .policy-title{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;}
+.list-tools{display:flex;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+.list-tools select,.list-tools input{background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:10px;padding:8px 10px;font-size:13px;font-family:inherit}
+.list-tools input{flex:1;min-width:120px}
+#list-summary{font-size:12px;color:var(--text2);margin:0 0 10px}
+.paid-val{color:var(--text2);font-weight:500;font-size:13px}
+.item-sub{font-size:12px;color:var(--text3);margin-top:4px}
+.dup-pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.dup-group{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:12px;margin-bottom:12px}
+.dup-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-weight:600;font-size:14px}
+.dup-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);font-size:13px}
+.dup-row .dr-main{flex:1;min-width:0;cursor:pointer}
+.dup-row .dr-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dup-row .dr-meta{color:var(--text3);font-size:11px;margin-top:2px}
+.mini-btn{background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.mini-btn.ok{background:var(--green);border-color:var(--green);color:#0f1117}
+.oos-panel{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);padding:12px;margin-top:12px}
+.oos-panel .oos-opts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.oos-panel .oos-opts button.on{background:var(--accent);color:#0f1117;border-color:var(--accent)}
+.oos-panel input{width:100%;box-sizing:border-box;background:var(--surface);color:var(--text);border:1px solid var(--border2);border-radius:8px;padding:8px;font-size:13px;margin-bottom:8px;font-family:inherit}
 .dropzone{display:block;border:2px dashed var(--border2);border-radius:var(--radius);padding:22px 16px;text-align:center;cursor:pointer;margin-bottom:10px;background:var(--bg2);transition:border-color .15s,background .15s}
 .dropzone.hot,.dropzone:hover{border-color:var(--accent);background:var(--bg3)}
 .dz-big{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
@@ -159,7 +178,7 @@ input,select,textarea{max-width:100%;min-width:0;}
   <div class="topbar">
     <div class="topbar-logo">
       <div class="logo-mark">JRP</div>
-      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.7 &middot; <span id="sync-status">local only</span></div></div>
+      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.8 &middot; <span id="sync-status">local only</span></div></div>
     </div>
     <div class="topbar-actions">
       <a class="icon-btn" href="https://docs.google.com/spreadsheets/d/1Cul1BwrNdRSUe80plykX0usHMw1cv-FUbvie2i-WmK8/edit" target="_blank" rel="noopener" title="Open Google Sheet" style="text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;width:auto;padding:0 10px">Sheet</a>
@@ -211,7 +230,32 @@ input,select,textarea{max-width:100%;min-width:0;}
       <button class="filter-pill" onclick="filterItems('Lighting',this)">Lighting</button>
       <button class="filter-pill" onclick="filterItems('Computers and storage',this)">Computers</button>
       <button class="filter-pill" onclick="filterItems('Audio',this)">Audio</button>
+      <button class="filter-pill" onclick="filterItems('Memory cards',this)">Cards</button>
+      <button class="filter-pill" onclick="filterItems('Cables and accessories',this)">Cables</button>
+      <button class="filter-pill" onclick="filterItems('Bags and cases',this)">Bags</button>
+      <button class="filter-pill" onclick="filterItems('Tripods and support',this)">Support</button>
+      <button class="filter-pill" onclick="filterItems('Books and media',this)">Books</button>
+      <button class="filter-pill" onclick="filterItems('Miscellaneous',this)">Misc</button>
+      <button class="filter-pill dup-pill" onclick="filterItems('dups',this)">Possible duplicates</button>
     </div>
+    <div class="list-tools">
+      <select id="sort-by" onchange="setListPref()">
+        <option value="added">Recently added</option>
+        <option value="dateNew">Purchase date, newest</option>
+        <option value="dateOld">Purchase date, oldest</option>
+        <option value="valHigh">Value, high to low</option>
+        <option value="valLow">Value, low to high</option>
+        <option value="name">Name, A to Z</option>
+        <option value="cat">Category</option>
+      </select>
+      <select id="show-status" onchange="setListPref()">
+        <option value="active">In service</option>
+        <option value="out">Out of service</option>
+        <option value="all">Everything</option>
+      </select>
+      <input id="list-q" type="search" placeholder="Filter list" oninput="renderItems()">
+    </div>
+    <div id="list-summary"></div>
     <div id="items-list"></div>
   </div>
 
@@ -397,7 +441,7 @@ function openSearch(){const q=prompt('Search gear inventory:');if(!q)return;cons
 function exportData(){const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jrp_gear_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);}
 function clearData(){if(confirm('Delete ALL local gear data? This cannot be undone.')){items=[];saveData();renderItems();updateDashboard();}}
 
-const APP_VERSION='v1.7';
+const APP_VERSION='v1.8';
 function normItem(r){const num=v=>{if(v===''||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(/[$,]/g,''));return isNaN(n)?null:n;};const day=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)?String(v):d.toISOString().split('T')[0];};return{...r,replacementValue:num(r.replacementValue)||0,purchasePrice:num(r.purchasePrice),originalMSRP:num(r.originalMSRP),currentNewValue:num(r.currentNewValue),usedMarketValue:num(r.usedMarketValue),itemAge:num(r.itemAge),usefulLife:num(r.usefulLife),enriched:r.enriched===true||String(r.enriched).toUpperCase()==='TRUE',purchaseDate:day(r.purchaseDate),dateAdded:day(r.dateAdded),lastUpdated:day(r.lastUpdated),outOfServiceDate:day(r.outOfServiceDate),status:r.status||'active',serialNumber:r.serialNumber==null?'':String(r.serialNumber)};}
 async function pullFromSheet(){const st=document.getElementById('sync-status');const url=getSettings().scriptUrl;if(!url){st.textContent='local only';return;}st.textContent='syncing...';try{const resp=await fetch(url+(url.includes('?')?'&':'?')+'action=getItems&t='+Date.now());const data=await resp.json();if(!data||!Array.isArray(data.items))throw new Error('no items');const sheet=data.items.filter(r=>r&&r.id).map(normItem);const ids=new Set(sheet.map(i=>i.id));const localOnly=items.filter(i=>!ids.has(i.id));items=sheet.concat(localOnly);saveData();updateDashboard();renderItems();localOnly.forEach(i=>syncToSheet(i));st.textContent='synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){console.log('Pull:',e.message);st.textContent='sheet pull failed';}}
 loadData();updateDashboard();renderItems();pullFromSheet();
@@ -563,6 +607,51 @@ function onAnyFiles(input){const files=[...input.files];input.value='';if(files.
  window.addEventListener('dragover',e=>{if(!isFiles(e))return;e.preventDefault();e.dataTransfer.dropEffect='copy';});
  window.addEventListener('dragleave',e=>{if(!isFiles(e))return;depth=Math.max(0,depth-1);if(!depth){ov.classList.remove('show');const dz=document.getElementById('dropzone');if(dz)dz.classList.remove('hot');}});
  window.addEventListener('drop',async e=>{if(!isFiles(e))return;e.preventDefault();depth=0;ov.classList.remove('show');const dz=document.getElementById('dropzone');if(dz)dz.classList.remove('hot');const files=await filesFromDrop(e.dataTransfer);if(files.length)ingestFiles(files);});})();
+
+// ===== v1.8: sorting, out of service, possible duplicates =====
+const OOS={sold:'Sold',lost:'Lost or stolen',retired:'Retired',duplicate:'Duplicate entry'};
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v);}catch(e){return d;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function setListPref(){lsSet('jrp_list_pref',{sort:document.getElementById('sort-by').value,show:document.getElementById('show-status').value});renderItems();}
+(function(){const p=lsGet('jrp_list_pref',{});if(p.sort)document.getElementById('sort-by').value=p.sort;if(p.show)document.getElementById('show-status').value=p.show;})();
+function itemVal(i){return parseFloat(i.replacementValue)||parseFloat(i.purchasePrice)||0;}
+function baseName(n){return String(n||'').replace(/\s*\(\d+ of \d+\)\s*$/,'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function orderOf(i){return ((String(i.conditionNotes||'').match(/#([0-9A-Za-z-]{6,})/)||[])[1])||'';}
+
+function dupGroups(){const act=items.filter(i=>i.status==='active');const parent={};const find=x=>parent[x]===x?x:(parent[x]=find(parent[x]));const join=(a,b)=>{parent[find(a)]=find(b);};act.forEach(i=>parent[i.id]=i.id);
+ const byKey={};act.forEach(i=>{const keys=[baseName(i.name)];const m=nz(i.model);if(m.length>=3)keys.push('m:'+nz(i.brand)+'|'+m);keys.forEach(k=>{if(!k)return;if(byKey[k])join(i.id,byKey[k]);else byKey[k]=i.id;});});
+ act.forEach(i=>{const m=findMatch(i,act);if(m&&(m.level==='certain'||m.level==='likely'))join(i.id,m.itemId);});
+ const g={};act.forEach(i=>{const r=find(i.id);(g[r]=g[r]||[]).push(i);});
+ const ok=new Set(lsGet('jrp_dup_ok',[]));
+ return Object.values(g).filter(a=>a.length>1).map(a=>({sig:a.map(i=>i.id).sort().join(','),items:a.sort((x,y)=>String(x.purchaseDate).localeCompare(String(y.purchaseDate)))})).filter(x=>!ok.has(x.sig)).sort((a,b)=>b.items.length-a.items.length);}
+
+function dupOk(sig){const ok=lsGet('jrp_dup_ok',[]);ok.push(sig);lsSet('jrp_dup_ok',ok);renderItems();}
+
+function setOutOfService(id,status,date,note){const it=items.find(i=>i.id===id);if(!it)return;it.status=status;if(status==='active'){it.outOfServiceDate='';it.conditionNotes=((it.conditionNotes||'')+' Back in service '+new Date().toISOString().slice(0,10)+'.').trim();}else{it.outOfServiceDate=date||new Date().toISOString().slice(0,10);it.conditionNotes=((it.conditionNotes||'')+' '+OOS[status]+' '+it.outOfServiceDate+(note?': '+note:'')+'.').trim();}saveData();syncToSheet(it);updateDashboard();renderItems();}
+retireItem=function(id){setOutOfService(id,'retired');closeModal('modal-detail');};
+
+function oosQuick(sel,id){const v=sel.value;sel.value='';if(v)setOutOfService(id,v);}
+
+renderItems=function(){const list=document.getElementById('items-list');const sum=document.getElementById('list-summary');const tools=document.querySelector('.list-tools');const q=(document.getElementById('list-q').value||'').toLowerCase().trim();const fmtShort=v=>'$'+Math.round(v).toLocaleString();
+ if(currentFilter==='dups'){tools.style.display='flex';document.getElementById('sort-by').style.display='none';document.getElementById('show-status').style.display='none';let groups=dupGroups();if(q)groups=groups.filter(g=>g.items.some(i=>(i.name+' '+(i.brand||'')).toLowerCase().includes(q)));sum.textContent=groups.length?groups.length+' groups that look like the same thing bought more than once. Mark extras out of service, or tap "I own all" to clear a group.':'';if(!groups.length){list.innerHTML='<div class="empty-state"><div class="empty-title">No possible duplicates left</div></div>';return;}
+  list.innerHTML=groups.map(g=>'<div class="dup-group"><div class="dup-head"><span>'+g.items.length+' &times; '+esc(g.items[0].name.replace(/\s*\(\d+ of \d+\)\s*$/,''))+'</span><button class="mini-btn ok" onclick="dupOk(\''+g.sig+'\')">I own all '+g.items.length+'</button></div>'+g.items.map(i=>'<div class="dup-row"><div class="dr-main" onclick="openDetail(\''+i.id+'\')"><div class="dr-name">'+esc(i.name)+'</div><div class="dr-meta">'+[i.purchaseDate||'no date',itemVal(i)?fmtShort(itemVal(i)):'',orderOf(i)?'order '+orderOf(i):''].filter(Boolean).join(' · ')+'</div></div><select class="mini-btn" onchange="oosQuick(this,\''+i.id+'\')"><option value="">Out of service...</option><option value="sold">Sold</option><option value="lost">Lost or stolen</option><option value="retired">Retired</option><option value="duplicate">Duplicate entry</option></select></div>').join('')+'</div>').join('');return;}
+ document.getElementById('sort-by').style.display='';document.getElementById('show-status').style.display='';
+ const show=document.getElementById('show-status').value;const sort=document.getElementById('sort-by').value;
+ let f=items.filter(i=>{if(show==='active'&&i.status!=='active')return false;if(show==='out'&&i.status==='active')return false;if(currentFilter==='needs')return!i.enriched&&i.status==='active';if(currentFilter!=='all'&&i.category!==currentFilter)return false;return true;});
+ if(q)f=f.filter(i=>[i.name,i.brand,i.model,i.serialNumber,i.category,i.conditionNotes].join(' ').toLowerCase().includes(q));
+ const idx=new Map(items.map((x,k)=>[x.id,k]));const d=i=>i.purchaseDate||'';
+ const cmp={added:(a,b)=>String(b.dateAdded||'').localeCompare(String(a.dateAdded||''))||idx.get(b.id)-idx.get(a.id),dateNew:(a,b)=>(d(a)?0:1)-(d(b)?0:1)||d(b).localeCompare(d(a)),dateOld:(a,b)=>(d(a)?0:1)-(d(b)?0:1)||d(a).localeCompare(d(b)),valHigh:(a,b)=>itemVal(b)-itemVal(a),valLow:(a,b)=>itemVal(a)-itemVal(b),name:(a,b)=>String(a.name).localeCompare(String(b.name)),cat:(a,b)=>String(a.category).localeCompare(String(b.category))||itemVal(b)-itemVal(a)}[sort];
+ f=f.slice().sort(cmp);
+ const tot=f.reduce((s,i)=>s+itemVal(i),0);sum.textContent=f.length+' item'+(f.length===1?'':'s')+(tot?' · '+fmtShort(tot)+' (replacement value, or price paid where none is set)':'');
+ if(!f.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">📷</div><div class="empty-title">Nothing here</div><div class="empty-sub">Try another filter</div></div>';return;}
+ const threshold=parseInt(getSettings().threshold||'500');
+ list.innerHTML=f.map(item=>{const rv=parseFloat(item.replacementValue)||0;const pp=parseFloat(item.purchasePrice)||0;const badges=['<span class="badge badge-cat">'+esc(item.category||'Uncategorized')+'</span>',item.status!=='active'?'<span class="badge badge-retired">'+esc(OOS[item.status]||item.status)+(item.outOfServiceDate?' '+item.outOfServiceDate:'')+'</span>':(!item.enriched?'<span class="badge badge-needs">Needs enrichment</span>':'<span class="badge badge-ok">Complete</span>'),item.valueSource==='ai'?'<span class="badge badge-ai">AI valued</span>':'',itemVal(item)>=threshold?'<span class="badge badge-over">High value</span>':''].filter(Boolean).join('');const valHtml=rv?fmt(rv):(pp?'<span class="paid-val">paid '+fmt(pp)+'</span>':'—');const sub=item.purchaseDate?'<div class="item-sub">Bought '+item.purchaseDate+'</div>':'';return'<div class="item-card" onclick="openDetail(\''+item.id+'\')"'+(item.status!=='active'?' style="opacity:.6"':'')+'><div class="item-card-top"><div class="item-card-name">'+esc(item.name)+'</div><div class="item-card-value">'+valHtml+'</div></div><div class="item-card-meta">'+badges+'</div>'+sub+'</div>';}).join('');};
+
+const _openDetailV17=openDetail;openDetail=function(id){_openDetailV17(id);const it=items.find(i=>i.id===id);if(!it)return;const btn=[...document.querySelectorAll('#modal-detail button')].find(b=>/retireItem/.test(b.getAttribute('onclick')||''));const panel=document.createElement('div');panel.className='oos-panel';
+ if(it.status!=='active'){panel.innerHTML='<div style="font-size:13px;margin-bottom:10px">'+esc(OOS[it.status]||it.status)+(it.outOfServiceDate?' on '+it.outOfServiceDate:'')+'</div><button class="submit-btn secondary" onclick="setOutOfService(\''+id+'\',\'active\');closeModal(\'modal-detail\')">Put back in service</button>';}
+ else{panel.innerHTML='<div class="section-label" style="margin-top:0">Take out of service</div><div class="oos-opts">'+Object.entries(OOS).map(([k,v])=>'<button class="mini-btn" data-s="'+k+'">'+v+'</button>').join('')+'</div><input type="date" class="oos-date" value="'+new Date().toISOString().slice(0,10)+'"><input type="text" class="oos-note" placeholder="Note (who bought it, police report #, etc.)"><button class="submit-btn secondary oos-save" disabled>Save</button>';let pick='';panel.querySelectorAll('.oos-opts button').forEach(b=>b.onclick=()=>{pick=b.dataset.s;panel.querySelectorAll('.oos-opts button').forEach(x=>x.classList.toggle('on',x===b));panel.querySelector('.oos-save').disabled=false;});panel.querySelector('.oos-save').onclick=()=>{if(!pick)return;setOutOfService(id,pick,panel.querySelector('.oos-date').value,panel.querySelector('.oos-note').value.trim());closeModal('modal-detail');};}
+ if(btn)btn.replaceWith(panel);else{const body=document.getElementById('detail-body');if(body)body.appendChild(panel);}};
+renderItems();
 </script>
 </body>
 </html>
