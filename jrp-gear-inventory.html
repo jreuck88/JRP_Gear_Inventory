@@ -125,6 +125,15 @@ input,select,textarea{max-width:100%;min-width:0;}
 .setup-notice-body{font-size:12px;color:var(--text2);line-height:1.6;}
 .policy-card{background:rgba(228,160,48,0.06);border:0.5px solid rgba(228,160,48,0.2);border-radius:var(--radius);padding:14px;margin-bottom:16px;}
 .policy-title{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;}
+.dropzone{display:block;border:2px dashed var(--border2);border-radius:var(--radius);padding:22px 16px;text-align:center;cursor:pointer;margin-bottom:10px;background:var(--bg2);transition:border-color .15s,background .15s}
+.dropzone.hot,.dropzone:hover{border-color:var(--accent);background:var(--bg3)}
+.dz-big{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.dz-small{font-size:12px;color:var(--text2);line-height:1.5}
+.img-mode{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);margin-bottom:10px;flex-wrap:wrap}
+.img-mode button{background:var(--surface);color:var(--text2);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer}
+.img-mode button.on{background:var(--accent);color:#0f1117;border-color:var(--accent)}
+#drop-overlay{position:fixed;inset:0;background:rgba(15,17,23,.88);border:3px dashed var(--accent);display:none;align-items:center;justify-content:center;z-index:9999;font-size:20px;font-weight:600;color:var(--accent);pointer-events:none}
+#drop-overlay.show{display:flex}
 .dash-import-btn{width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--radius);padding:14px;margin-bottom:16px;color:var(--text);font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
 #dash-import-badge{background:var(--accent);color:#0f1117;border-radius:10px;padding:2px 8px;font-size:12px;font-weight:700;display:none;}
 .import-counts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0;}
@@ -150,7 +159,7 @@ input,select,textarea{max-width:100%;min-width:0;}
   <div class="topbar">
     <div class="topbar-logo">
       <div class="logo-mark">JRP</div>
-      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.6 &middot; <span id="sync-status">local only</span></div></div>
+      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.7 &middot; <span id="sync-status">local only</span></div></div>
     </div>
     <div class="topbar-actions">
       <a class="icon-btn" href="https://docs.google.com/spreadsheets/d/1Cul1BwrNdRSUe80plykX0usHMw1cv-FUbvie2i-WmK8/edit" target="_blank" rel="noopener" title="Open Google Sheet" style="text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;width:auto;padding:0 10px">Sheet</a>
@@ -159,7 +168,7 @@ input,select,textarea{max-width:100%;min-width:0;}
   </div>
 
   <div id="screen-dash" class="screen active">
-    <button class="dash-import-btn" onclick="showScreen('import')"><span>📷 Batch import and review</span><span id="dash-import-badge"></span></button>
+    <button class="dash-import-btn" onclick="showScreen('import')"><span>📥 Import and review</span><span id="dash-import-badge"></span></button>
     <div class="dash-hero">
       <div class="dash-hero-label">Total replacement value</div>
       <div class="dash-hero-value" id="total-value">$0</div>
@@ -234,15 +243,20 @@ input,select,textarea{max-width:100%;min-width:0;}
     <div style="height:24px"></div>
     <div class="section-label">Data</div>
     <a class="submit-btn secondary" href="https://docs.google.com/spreadsheets/d/1Cul1BwrNdRSUe80plykX0usHMw1cv-FUbvie2i-WmK8/edit" target="_blank" rel="noopener" style="display:block;text-align:center;box-sizing:border-box;text-decoration:none;margin-bottom:8px">Open Google Sheet (Summary tab)</a>
-    <label class="submit-btn secondary" style="display:block;text-align:center;box-sizing:border-box;margin-top:8px">Import receipt list (CSV)<input type="file" accept=".csv,text/csv" style="display:none" onchange="onReceiptCSV(this)"></label>
+    <label class="submit-btn secondary" style="display:block;text-align:center;box-sizing:border-box;margin-top:8px">Import receipts, orders or data files<input type="file" multiple style="display:none" onchange="onAnyFiles(this)"></label>
     <button class="submit-btn secondary" onclick="exportData()">Export inventory as JSON</button>
     <button class="submit-btn secondary" style="margin-top:8px;color:var(--red);" onclick="clearData()">Clear all local data</button>
   </div>
 
   <div id="screen-import" class="screen">
     <div class="section-label">Batch import</div>
-    <label class="submit-btn" style="display:block;text-align:center;box-sizing:border-box">📷 Add photos<input type="file" accept="image/*" multiple style="display:none" onchange="onPhotosPicked(this)"></label>
-    <label class="submit-btn secondary" style="display:block;text-align:center;box-sizing:border-box">🧾 Add receipts (PDF or image)<input type="file" accept="image/*,application/pdf,.pdf" multiple style="display:none" onchange="onReceiptFiles(this)"></label>
+    <label class="dropzone" id="dropzone">
+      <div class="dz-big">Drop files or folders here</div>
+      <div class="dz-small">or tap to pick. Photos, receipts (PDF, image, email, HTML, text), spreadsheets (CSV, TSV, Excel), Amazon order exports (zip or unzipped folder), app JSON backups.</div>
+      <input type="file" multiple style="display:none" onchange="onAnyFiles(this)">
+    </label>
+    <div class="img-mode"><span>Loose images are</span><button id="im-gear" class="on" onclick="setImgMode('gear')">Gear photos</button><button id="im-rcpt" onclick="setImgMode('receipt')">Receipts</button></div>
+    <label class="submit-btn secondary" style="display:block;text-align:center;box-sizing:border-box">📷 Take or add gear photos<input type="file" accept="image/*" multiple style="display:none" onchange="onPhotosPicked(this)"></label>
     <button class="submit-btn secondary" onclick="processQueue()">Process photos now</button>
     <div class="import-counts">
       <div class="stat-card"><div class="stat-label">Photos waiting</div><div class="stat-value" id="import-queued">0</div></div>
@@ -383,7 +397,7 @@ function openSearch(){const q=prompt('Search gear inventory:');if(!q)return;cons
 function exportData(){const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jrp_gear_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);}
 function clearData(){if(confirm('Delete ALL local gear data? This cannot be undone.')){items=[];saveData();renderItems();updateDashboard();}}
 
-const APP_VERSION='v1.6';
+const APP_VERSION='v1.7';
 function normItem(r){const num=v=>{if(v===''||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(/[$,]/g,''));return isNaN(n)?null:n;};const day=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)?String(v):d.toISOString().split('T')[0];};return{...r,replacementValue:num(r.replacementValue)||0,purchasePrice:num(r.purchasePrice),originalMSRP:num(r.originalMSRP),currentNewValue:num(r.currentNewValue),usedMarketValue:num(r.usedMarketValue),itemAge:num(r.itemAge),usefulLife:num(r.usefulLife),enriched:r.enriched===true||String(r.enriched).toUpperCase()==='TRUE',purchaseDate:day(r.purchaseDate),dateAdded:day(r.dateAdded),lastUpdated:day(r.lastUpdated),outOfServiceDate:day(r.outOfServiceDate),status:r.status||'active',serialNumber:r.serialNumber==null?'':String(r.serialNumber)};}
 async function pullFromSheet(){const st=document.getElementById('sync-status');const url=getSettings().scriptUrl;if(!url){st.textContent='local only';return;}st.textContent='syncing...';try{const resp=await fetch(url+(url.includes('?')?'&':'?')+'action=getItems&t='+Date.now());const data=await resp.json();if(!data||!Array.isArray(data.items))throw new Error('no items');const sheet=data.items.filter(r=>r&&r.id).map(normItem);const ids=new Set(sheet.map(i=>i.id));const localOnly=items.filter(i=>!ids.has(i.id));items=sheet.concat(localOnly);saveData();updateDashboard();renderItems();localOnly.forEach(i=>syncToSheet(i));st.textContent='synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){console.log('Pull:',e.message);st.textContent='sheet pull failed';}}
 loadData();updateDashboard();renderItems();pullFromSheet();
@@ -447,9 +461,108 @@ function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader()
 async function fileHash(f){try{const b=await f.arrayBuffer();const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('');}catch(e){return null;}}
 function seenHashes(){try{return new Set(JSON.parse(localStorage.getItem('jrp_file_hashes')||'[]'));}catch(e){return new Set();}}
 function saveHashes(s){try{localStorage.setItem('jrp_file_hashes',JSON.stringify([...s]));}catch(e){}}
-async function onReceiptFiles(input){const files=[...input.files];input.value='';if(!files.length)return;if(!getSettings().apiKey){setImportStatus('Add your Anthropic API key in Settings to read receipts.',true);return;}showScreen('import');stickyMsg='';let made=0,matched=0,failed=0,dupes=0;const known=await knownOrders();const hashes=seenHashes();let same=0;for(let i=0;i<files.length;i++){const f=files[i];const hh=await fileHash(f);if(hh&&hashes.has(hh)){same++;continue;}if(hh){hashes.add(hh);saveHashes(hashes);}setImportStatus('Reading receipt '+(i+1)+' of '+files.length+': '+f.name);try{const isPdf=f.type==='application/pdf'||/\.pdf$/i.test(f.name);const block=isPdf?{type:'document',source:{type:'base64',media_type:'application/pdf',data:await fileToB64(f)}}:{type:'image',source:{type:'base64',media_type:'image/jpeg',data:(await shrink(f,2000,0.85)).split(',')[1]}};const r=await callClaude([block,{type:'text',text:'This is a purchase receipt, invoice or order confirmation. List the physical gear items bought (cameras, lenses, lighting, audio, computers, storage, memory cards, bags, stands, cables, accessories) and photography or technical books. Skip software, gift cards, shipping, tax, protection plans, gels, tape and other consumables. Category must be one of: '+CATS.join(', ')+'. Return only JSON: {"retailer":"","orderNumber":"","date":"YYYY-MM-DD","items":[{"name":"","brand":"","model":"","category":"","qty":1,"unitPrice":null}]}'}],2000);if(r.orderNumber&&known.has(String(r.orderNumber).toLowerCase())){dupes++;continue;}if(r.orderNumber)known.add(String(r.orderNumber).toLowerCase());const lines=r.items||[];for(const it of lines){const qty=Math.max(1,parseInt(it.qty)||1);for(let k=0;k<qty;k++){const src='From receipt: '+(r.retailer||f.name)+(r.orderNumber?' #'+r.orderNumber:'');const d={id:uid('dr'),source:'receipt',sourceLabel:src+(r.date?' · '+r.date:''),photoIds:[],name:(it.name||'Item')+(qty>1?' ('+(k+1)+' of '+qty+')':''),brand:it.brand||'',model:it.model||'',serialNumber:'',category:CATS.includes(it.category)?it.category:'Miscellaneous',purchaseDate:r.date||'',purchasePrice:(typeof it.unitPrice==='number')?it.unitPrice:null,notes:'Read from '+f.name,itemNotes:src+'. Needs photo.'};d.match=findMatch(d);if(d.match)matched++;await idbPut('drafts',d);made++;}}if(!lines.length)failed++;}catch(e){failed++;console.log('Receipt failed',f.name,e);}}await refreshImport();setImportStatus(made+' items read from '+files.length+' receipt'+(files.length>1?'s':'')+'. '+matched+' look like gear already in your inventory.'+(same?' Skipped '+same+' identical file'+(same>1?'s':'')+' already loaded.':'')+(dupes?' Skipped '+dupes+' receipt'+(dupes>1?'s':'')+' already loaded (same order number).':'')+(failed?' '+failed+' file'+(failed>1?'s':'')+' had no gear or could not be read.':''),true);}
+async function onReceiptFiles(input){const files=[...input.files];input.value='';if(!files.length)return;if(!getSettings().apiKey){setImportStatus('Add your Anthropic API key in Settings to read receipts.',true);return;}showScreen('import');stickyMsg='';let made=0,matched=0,failed=0,dupes=0;const known=await knownOrders();const hashes=seenHashes();let same=0;for(let i=0;i<files.length;i++){const f=files[i];const hh=await fileHash(f);if(hh&&hashes.has(hh)){same++;continue;}if(hh){hashes.add(hh);saveHashes(hashes);}setImportStatus('Reading receipt '+(i+1)+' of '+files.length+': '+f.name);try{const block=await receiptBlock(f);const r=await callClaude([block,{type:'text',text:'This is a purchase receipt, invoice or order confirmation. List the physical gear items bought (cameras, lenses, lighting, audio, computers, storage, memory cards, bags, stands, cables, accessories) and photography or technical books. Skip software, gift cards, shipping, tax, protection plans, gels, tape and other consumables. Category must be one of: '+CATS.join(', ')+'. Return only JSON: {"retailer":"","orderNumber":"","date":"YYYY-MM-DD","items":[{"name":"","brand":"","model":"","category":"","qty":1,"unitPrice":null}]}'}],2000);if(r.orderNumber&&known.has(String(r.orderNumber).toLowerCase())){dupes++;continue;}if(r.orderNumber)known.add(String(r.orderNumber).toLowerCase());const lines=r.items||[];for(const it of lines){const qty=Math.max(1,parseInt(it.qty)||1);for(let k=0;k<qty;k++){const src='From receipt: '+(r.retailer||f.name)+(r.orderNumber?' #'+r.orderNumber:'');const d={id:uid('dr'),source:'receipt',sourceLabel:src+(r.date?' · '+r.date:''),photoIds:[],name:(it.name||'Item')+(qty>1?' ('+(k+1)+' of '+qty+')':''),brand:it.brand||'',model:it.model||'',serialNumber:'',category:CATS.includes(it.category)?it.category:'Miscellaneous',purchaseDate:r.date||'',purchasePrice:(typeof it.unitPrice==='number')?it.unitPrice:null,notes:'Read from '+f.name,itemNotes:src+'. Needs photo.'};d.match=findMatch(d);if(d.match)matched++;await idbPut('drafts',d);made++;}}if(!lines.length)failed++;}catch(e){failed++;console.log('Receipt failed',f.name,e);}}await refreshImport();setImportStatus(made+' items read from '+files.length+' receipt'+(files.length>1?'s':'')+'. '+matched+' look like gear already in your inventory.'+(same?' Skipped '+same+' identical file'+(same>1?'s':'')+' already loaded.':'')+(dupes?' Skipped '+dupes+' receipt'+(dupes>1?'s':'')+' already loaded (same order number).':'')+(failed?' '+failed+' file'+(failed>1?'s':'')+' had no gear or could not be read.':''),true);}
 function toggleKey(btn){const el=document.getElementById('api-key');el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'Show':'Hide';}
 
+
+// ===== v1.7: drop anything import (folders, zips, Amazon exports, spreadsheets, emails, JSON) =====
+const LIBS={JSZip:'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',XLSX:'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'};
+function loadLib(name){if(window[name])return Promise.resolve(window[name]);return new Promise((res,rej)=>{const s=document.createElement('script');s.src=LIBS[name];s.onload=()=>res(window[name]);s.onerror=()=>rej(new Error('Could not load the '+name+' reader. Check your connection.'));document.head.appendChild(s);});}
+let imgMode='gear';
+function setImgMode(m){imgMode=m;document.getElementById('im-gear').classList.toggle('on',m==='gear');document.getElementById('im-rcpt').classList.toggle('on',m==='receipt');}
+function ext(n){const m=String(n||'').toLowerCase().match(/\.([a-z0-9]+)$/);return m?m[1]:'';}
+const MIME={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',heic:'image/heic',heif:'image/heif',webp:'image/webp',gif:'image/gif',csv:'text/csv',tsv:'text/tab-separated-values',txt:'text/plain',html:'text/html',htm:'text/html',eml:'message/rfc822',json:'application/json',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',xls:'application/vnd.ms-excel'};
+const IMG_EXT=['jpg','jpeg','png','heic','heif','webp','gif'];
+const TEXT_RCPT_EXT=['eml','html','htm','txt','mht','mhtml'];
+// Files that come in an Amazon export but are not purchases
+const SKIP_RE=/(cart history|digital (borrowed|content|returns)|delivery photos|sustainability|customerreviews|filedescriptions|replacement orders|photoondelivery|__macosx|\.ds_store)/i;
+const RETURNS_RE=/(refund|return)/i;
+
+function stripHtml(h){try{const doc=new DOMParser().parseFromString(h,'text/html');doc.querySelectorAll('script,style').forEach(e=>e.remove());return (doc.body?doc.body.innerText||doc.body.textContent:doc.textContent)||'';}catch(e){return h.replace(/<[^>]+>/g,' ');}}
+function qpDecode(t){return t.replace(/=\r?\n/g,'').replace(/=([0-9A-F]{2})/gi,(m,h)=>String.fromCharCode(parseInt(h,16)));}
+function b64Text(t){try{const bin=atob(t.replace(/\s+/g,''));return new TextDecoder('utf-8').decode(Uint8Array.from(bin,c=>c.charCodeAt(0)));}catch(e){return '';}}
+// Minimal MIME walker: returns {text, pdf (base64 or null)}
+function parseMime(raw){let text='',pdf=null;const walk=part=>{const sep=part.search(/\r?\n\r?\n/);const head=sep>=0?part.slice(0,sep):'';let body=sep>=0?part.slice(sep).replace(/^\r?\n\r?\n/,''):part;const h=head.replace(/\r?\n[ \t]+/g,' ');const ct=(h.match(/content-type:\s*([^;\r\n]+)/i)||[])[1]||'text/plain';const enc=((h.match(/content-transfer-encoding:\s*([^\s;]+)/i)||[])[1]||'').toLowerCase();const bnd=(h.match(/boundary="?([^";\r\n]+)"?/i)||[])[1];if(/multipart\//i.test(ct)&&bnd){body.split('--'+bnd).slice(1).forEach(p=>{if(!/^--/.test(p))walk(p.replace(/^\r?\n/,''));});return;}if(/application\/pdf/i.test(ct)||(/application\/octet-stream/i.test(ct)&&/\.pdf/i.test(h))){if(enc==='base64'&&!pdf)pdf=body.replace(/\s+/g,'');return;}if(/^text\//i.test(ct)){let t=enc==='base64'?b64Text(body):enc==='quoted-printable'?qpDecode(body):body;if(/html/i.test(ct))t=stripHtml(t);if(t.trim().length>text.trim().length)text=t;}};walk(raw);return {text,pdf};}
+
+// Called by onReceiptFiles for every receipt file it reads
+async function receiptBlock(f){const e=ext(f.name);if(f.type==='application/pdf'||e==='pdf')return {type:'document',source:{type:'base64',media_type:'application/pdf',data:await fileToB64(f)}};
+ if(TEXT_RCPT_EXT.includes(e)||/^text\/|message\/rfc822/.test(f.type)){const raw=await f.text();let txt=raw;if(e==='eml'||e==='mht'||e==='mhtml'||/message\/rfc822/.test(f.type)){const m=parseMime(raw);if(m.pdf)return {type:'document',source:{type:'base64',media_type:'application/pdf',data:m.pdf}};txt=m.text||raw;}else if(e==='html'||e==='htm'||/html/.test(f.type))txt=stripHtml(raw);txt=txt.replace(/[ \t]+/g,' ').replace(/\n\s*\n+/g,'\n').trim().slice(0,60000);if(!txt)throw new Error('Empty file');return {type:'text',text:'Receipt text from '+f.name+':\n\n'+txt};}
+ return {type:'image',source:{type:'base64',media_type:'image/jpeg',data:(await shrink(f,2000,0.85)).split(',')[1]}};}
+
+// ---- collect files from a drop (handles folders) ----
+async function filesFromDrop(dt){const out=[];const items=[...(dt.items||[])];const entries=items.map(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry()).filter(Boolean);if(!entries.length)return [...dt.files];const readAll=r=>new Promise(res=>{const acc=[];const step=()=>r.readEntries(b=>{if(!b.length)return res(acc);acc.push(...b);step();},()=>res(acc));step();});const walk=async en=>{if(en.isFile){const f=await new Promise(res=>en.file(res,()=>res(null)));if(f){f._path=en.fullPath;out.push(f);}}else if(en.isDirectory){for(const c of await readAll(en.createReader()))await walk(c);}};for(const en of entries)await walk(en);return out;}
+async function expandZip(f){const JSZip=await loadLib('JSZip');const z=await JSZip.loadAsync(f);const out=[];for(const name of Object.keys(z.files)){const en=z.files[name];if(en.dir)continue;const base=name.split('/').pop();if(!base||base.startsWith('.'))continue;const blob=await en.async('blob');const nf=new File([blob],base,{type:MIME[ext(base)]||''});nf._path=f.name+'/'+name;out.push(nf);}return out;}
+
+// ---- table helpers ----
+function normHead(h){return String(h||'').replace(/^﻿/,'').trim().toLowerCase();}
+function colFinder(head){return names=>{for(const n of names){const i=head.indexOf(n);if(i>=0)return i;}for(const n of names){const i=head.findIndex(h=>h.startsWith(n));if(i>=0)return i;}return -1;};}
+function parseTSV(text){return text.split(/\r?\n/).filter(l=>l.trim()).map(l=>l.split('\t'));}
+function money(v){const n=parseFloat(String(v||'').replace(/[^0-9.\-]/g,''));return isNaN(n)?null:n;}
+function isoDate(v){v=String(v||'').trim();if(!v)return '';if(/^\d{4}-\d{2}-\d{2}/.test(v))return v.slice(0,10);const d=new Date(v);return isNaN(d)?v:d.toISOString().slice(0,10);}
+async function tablesFromFile(f){const e=ext(f.name);if(e==='xlsx'||e==='xls'||e==='xlsm'||e==='ods'){const XLSX=await loadLib('XLSX');const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});return wb.SheetNames.map(n=>({name:f.name+(wb.SheetNames.length>1?' ('+n+')':''),rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false,defval:''}).map(r=>r.map(c=>String(c)))})).filter(t=>t.rows.length>1);}
+ const text=await f.text();const rows=(e==='tsv'||(!text.includes(',')&&text.includes('\t')))?parseTSV(text):parseCSV(text);return rows.length>1?[{name:f.name,rows}]:[];}
+function tableKind(t){const head=t.rows[0].map(normHead);const has=n=>head.includes(n);if(has('asin')&&(has('product name')||has('title'))&&has('order id'))return 'amazon';if(RETURNS_RE.test(t.name)&&has('order id'))return 'returns';if(head.some(h=>h.startsWith('item'))&&head.some(h=>h.startsWith('category'))&&head.some(h=>h.startsWith('retailer')))return 'template';return 'generic';}
+function setStore(k){try{return new Set(JSON.parse(localStorage.getItem(k)||'[]'));}catch(e){return new Set();}}
+function saveStore(k,s){try{localStorage.setItem(k,JSON.stringify([...s]));}catch(e){}}
+function getCache(){try{return JSON.parse(localStorage.getItem('jrp_gear_class')||'{}');}catch(e){return {};}}
+function saveCache(c){try{localStorage.setItem('jrp_gear_class',JSON.stringify(c));}catch(e){}}
+
+// Ask Claude which purchase lines are gear. Results cached by ASIN or name so re-imports are free.
+async function classifyGear(list,label){const cache=getCache();const todo=list.filter(x=>!(x.key in cache));for(let i=0;i<todo.length;i+=60){const chunk=todo.slice(i,i+60);setImportStatus('Sorting gear from everything else in '+label+'... '+Math.min(i+60,todo.length)+' of '+todo.length);const lines=chunk.map((x,j)=>j+'. '+x.name+(x.price!=null?' ($'+x.price+')':'')).join('\n');const r=await callClaude([{type:'text',text:'Numbered purchases from a professional photographer\'s order history. Keep only durable gear worth tracking as business assets or insuring: cameras, lenses, lighting, light stands, modifiers, audio, computers, monitors, drives and storage, memory cards, card readers, batteries and chargers, filters, bags and cases, tripods, gimbals, drones, cables, adapters, and photography or technical books. Skip household goods, food, clothing, consumables (gels, tape, wipes, cleaning supplies, batteries sold as disposables), software, subscriptions and gift cards. For each kept line give a short clean name (brand, model, type, not the full listing title). Category must be one of: '+CATS.join(', ')+'. Return only JSON: {"keep":[{"i":0,"name":"","brand":"","model":"","category":""}]}\n\n'+lines}],4000);const kept={};(r.keep||[]).forEach(k=>{if(chunk[k.i])kept[k.i]=k;});chunk.forEach((x,j)=>{cache[x.key]=kept[j]?{name:kept[j].name,brand:kept[j].brand||'',model:kept[j].model||'',category:kept[j].category||''}:0;});saveCache(cache);}return cache;}
+
+function mkDraft(o){const d={id:uid('dr'),source:'receipt',sourceLabel:o.label,photoIds:[],name:o.name,brand:o.brand||'',model:o.model||'',serialNumber:o.serial||'',category:CATS.includes(o.category)?o.category:'Miscellaneous',purchaseDate:o.date||'',purchasePrice:o.price==null?null:o.price,notes:o.notes||'',itemNotes:o.itemNotes||''};d.match=findMatch(d);return d;}
+
+// Purchase table import shared by Amazon and generic spreadsheets
+async function importPurchases(t,kind,returns){const head=t.rows[0].map(normHead);const col=colFinder(head);const C={name:col(['product name','item name','item','product','title','description','name']),brand:col(['brand','manufacturer']),model:col(['model','model number']),serial:col(['item serial number','serial number','serial']),date:col(['order date','purchase date','transaction date','date']),price:col(['unit price','item price','price','cost','amount','total owed','total']),qty:col(['quantity','qty']),order:col(['order id','order number','order #','invoice number','invoice','receipt number']),asin:col(['asin','sku']),status:col(['order status','status']),cond:col(['product condition','condition']),ret:col(['retailer','store','vendor','merchant','seller','website'])};
+ if(C.name<0)return {msg:t.name+': could not find a product or item column.'};
+ const g=(r,k)=>C[k]>=0?String(r[C[k]]||'').trim():'';const retailer=kind==='amazon'?'Amazon':'';
+ const seen=setStore('jrp_import_seen');const known=await knownOrders();let cancelled=0,returned=0,already=0;const lines=[];
+ for(const r of t.rows.slice(1)){const name=g(r,'name');if(!name)continue;if(/cancel/i.test(g(r,'status'))){cancelled++;continue;}const order=g(r,'order'),asin=g(r,'asin'),date=isoDate(g(r,'date'));const key=(order||date)+'|'+(asin||name.toLowerCase().slice(0,80));if(returns.pairs.has(order+'|'+asin)){returned++;continue;}if(seen.has(key)||(order&&known.has(order.toLowerCase())&&!seen.has('o|'+order))){already++;continue;}lines.push({key,order,asin,date,name,brand:g(r,'brand'),model:g(r,'model'),serial:g(r,'serial'),cond:g(r,'cond'),store:g(r,'ret'),price:money(g(r,'price')),qty:Math.max(1,parseInt(g(r,'qty'))||1),cls:asin||name.toLowerCase()});}
+ if(!lines.length)return {msg:t.name+': nothing new.'+(already?' '+already+' lines already loaded.':'')};
+ let cache=null;if(getSettings().apiKey){const uniq={};lines.forEach(l=>{if(!uniq[l.cls])uniq[l.cls]={key:l.cls,name:l.name,price:l.price};});cache=await classifyGear(Object.values(uniq),t.name);}else if(kind==='amazon')return {msg:t.name+': add your Anthropic API key in Settings first. Amazon history mixes household stuff with gear, and the key lets the app sort it.'};
+ let made=0,matched=0,notGear=0;
+ for(const l of lines){seen.add(l.key);if(l.order)seen.add('o|'+l.order);const c=cache?cache[l.cls]:{name:l.name};if(!c){notGear++;continue;}const store=kind==='amazon'?'Amazon':(l.store||t.name);const label=(kind==='amazon'?'From Amazon order history':'From '+store)+(l.order?' #'+l.order:'')+(l.date?' · '+l.date:'');const flag=returns.orders.has(l.order)?'Order has a return or refund on record. Check this item was not sent back. ':'';const condNote=l.cond&&!/^new$/i.test(l.cond)?'Bought '+l.cond.toLowerCase()+'. ':'';const priceNote=l.price!=null?'$'+l.price.toFixed(2)+(l.date?' on '+l.date:'')+'. ':'';const full=kind==='amazon'||cache?'Listing: '+l.name:'';
+  for(let k=0;k<l.qty;k++){const d=mkDraft({label,name:(c.name||l.name)+(l.qty>1?' ('+(k+1)+' of '+l.qty+')':''),brand:c.brand||l.brand,model:c.model||l.model,serial:l.qty===1?l.serial:'',category:c.category,date:l.date,price:l.price,notes:(flag+condNote+priceNote+full).trim(),itemNotes:(label+'. '+flag+condNote+'Needs photo.').trim()});if(d.match)matched++;await idbPut('drafts',d);made++;}}
+ saveStore('jrp_import_seen',seen);
+ return {msg:t.name+': '+made+' gear items found'+(notGear?', '+notGear+' non-gear lines skipped':'')+(cancelled?', '+cancelled+' cancelled skipped':'')+(returned?', '+returned+' returned skipped':'')+(already?', '+already+' already loaded':'')+'.'+(matched?' '+matched+' look like gear you already have.':'')};}
+
+function collectReturns(t,returns){const head=t.rows[0].map(normHead);const col=colFinder(head);const o=col(['order id']),a=col(['asin']);let n=0;for(const r of t.rows.slice(1)){const id=String(r[o]||'').trim();if(!id)continue;const asin=a>=0?String(r[a]||'').trim():'';if(asin)returns.pairs.add(id+'|'+asin);else returns.orders.add(id);n++;}return n;}
+
+async function importBackupJSON(f){let data;try{data=JSON.parse(await f.text());}catch(e){return {msg:f.name+': not valid JSON.'};}const arr=Array.isArray(data)?data:(data.items||[]);if(!Array.isArray(arr)||!arr.length)return {msg:f.name+': no items found.'};const ids=new Set(items.map(i=>i.id));let made=0,skip=0;for(const it of arr){if(!it||!it.name){continue;}if(it.id&&ids.has(it.id)){skip++;continue;}const d=mkDraft({label:'From backup file '+f.name,name:it.name,brand:it.brand,model:it.model,serial:it.serialNumber,category:it.category,date:it.purchaseDate,price:it.purchasePrice!=null?Number(it.purchasePrice):null,notes:it.conditionNotes||'',itemNotes:it.conditionNotes||''});await idbPut('drafts',d);made++;}return {msg:f.name+': '+made+' items to review'+(skip?', '+skip+' already in inventory':'')+'.'};}
+
+// ---- main router ----
+let ingesting=false;
+async function ingestFiles(files){if(ingesting){setImportStatus('Still working on the last batch. Drop again when it finishes.',true);return;}ingesting=true;showScreen('import');stickyMsg='';const report=[];const lastStatus=()=>(document.getElementById('import-status')||{}).textContent||'';
+ try{let queue=[...files];let skipped=0;const unsupported=[];
+  // unzip first
+  for(let i=0;i<queue.length;i++){const f=queue[i];if(ext(f.name)==='zip'){setImportStatus('Unzipping '+f.name+'...');try{queue.splice(i,1,...await expandZip(f));i--;}catch(e){report.push(f.name+': '+e.message);queue.splice(i,1);i--;}}}
+  queue=queue.filter(f=>{if(SKIP_RE.test((f._path||'')+'/'+f.name)){skipped++;return false;}return true;});
+  const photos=[],receipts=[],tables=[],jsons=[];
+  for(const f of queue){const e=ext(f.name);const isImg=IMG_EXT.includes(e)||/^image\//.test(f.type);
+   if(['csv','tsv','xlsx','xls','xlsm','ods'].includes(e))tables.push(f);
+   else if(e==='json')jsons.push(f);
+   else if(e==='pdf'||TEXT_RCPT_EXT.includes(e))receipts.push(f);
+   else if(isImg){(imgMode==='receipt'||/(receipt|invoice|order|confirm|scan)/i.test(f.name)?receipts:photos).push(f);}
+   else unsupported.push(f.name);}
+  if(tables.length){const all=[];for(const f of tables){setImportStatus('Reading '+f.name+'...');try{all.push(...(await tablesFromFile(f)));}catch(e){report.push(f.name+': '+e.message);}}
+   const returns={pairs:new Set(),orders:new Set()};
+   for(const t of all.filter(t=>tableKind(t)==='returns')){const n=collectReturns(t,returns);report.push(t.name+': '+n+' returns and refunds noted.');}
+   for(const t of all){const kind=tableKind(t);if(kind==='returns')continue;try{if(kind==='template'){const csv=t.rows.map(r=>r.map(c=>/[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c).join(',')).join('\n');await onReceiptCSV({files:[new File([csv],t.name+'.csv',{type:'text/csv'})],value:''});report.push(t.name+': '+lastStatus());}else{const r=await importPurchases(t,kind,returns);report.push(r.msg);}}catch(e){report.push(t.name+': stopped, '+e.message);}}}
+  for(const f of jsons){const r=await importBackupJSON(f);report.push(r.msg);}
+  if(receipts.length){await onReceiptFiles({files:receipts,value:''});report.push(lastStatus());}
+  if(photos.length){await onPhotosPicked({files:photos,value:''});report.push(photos.length+' gear photo'+(photos.length>1?'s':'')+' queued for identification.');}
+  if(skipped)report.push('Ignored '+skipped+(skipped>1?' files that are not purchases':' file that is not a purchase')+' (cart history, digital orders, delivery photos and similar).');
+  if(unsupported.length)report.push('Could not use: '+unsupported.slice(0,6).join(', ')+(unsupported.length>6?' and '+(unsupported.length-6)+' more':'')+'.');
+ }catch(e){report.push('Import stopped: '+e.message);}
+ finally{ingesting=false;await refreshImport();updateDashboard();setImportStatus(report.filter(Boolean).join(' \n')||'Nothing to import.',true);const el=document.getElementById('import-status');if(el)el.style.whiteSpace='pre-line';}}
+function onAnyFiles(input){const files=[...input.files];input.value='';if(files.length)ingestFiles(files);}
+
+// ---- drag and drop wiring: drop zone plus whole window ----
+(function(){const ov=document.createElement('div');ov.id='drop-overlay';ov.textContent='Drop to import';document.body.appendChild(ov);let depth=0;const isFiles=e=>e.dataTransfer&&[...(e.dataTransfer.types||[])].includes('Files');
+ window.addEventListener('dragenter',e=>{if(!isFiles(e))return;e.preventDefault();depth++;ov.classList.add('show');const dz=document.getElementById('dropzone');if(dz)dz.classList.add('hot');});
+ window.addEventListener('dragover',e=>{if(!isFiles(e))return;e.preventDefault();e.dataTransfer.dropEffect='copy';});
+ window.addEventListener('dragleave',e=>{if(!isFiles(e))return;depth=Math.max(0,depth-1);if(!depth){ov.classList.remove('show');const dz=document.getElementById('dropzone');if(dz)dz.classList.remove('hot');}});
+ window.addEventListener('drop',async e=>{if(!isFiles(e))return;e.preventDefault();depth=0;ov.classList.remove('show');const dz=document.getElementById('dropzone');if(dz)dz.classList.remove('hot');const files=await filesFromDrop(e.dataTransfer);if(files.length)ingestFiles(files);});})();
 </script>
 </body>
 </html>
