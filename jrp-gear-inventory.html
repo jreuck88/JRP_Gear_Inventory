@@ -186,7 +186,7 @@ input,select,textarea{max-width:100%;min-width:0;}
   <div class="topbar">
     <div class="topbar-logo">
       <div class="logo-mark">JRP</div>
-      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.9 &middot; <span id="sync-status">local only</span></div></div>
+      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.9.1 &middot; <span id="sync-status">local only</span></div></div>
     </div>
     <div class="topbar-actions">
       <a class="icon-btn" href="https://docs.google.com/spreadsheets/d/1Cul1BwrNdRSUe80plykX0usHMw1cv-FUbvie2i-WmK8/edit" target="_blank" rel="noopener" title="Open Google Sheet" style="text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;width:auto;padding:0 10px">Sheet</a>
@@ -200,6 +200,7 @@ input,select,textarea{max-width:100%;min-width:0;}
       <div class="dash-hero-label">Total replacement value</div>
       <div class="dash-hero-value" id="total-value">$0</div>
       <div class="dash-hero-sub">vs. $20,000 photographic equipment limit</div>
+      <div id="value-basis" style="font-size:12px;color:var(--text2);margin-top:6px"></div>
       <div class="coverage-bar-wrap">
         <div class="coverage-bar-labels"><span>$0</span><span id="coverage-pct">0% of $20K limit</span><span>$20K</span></div>
         <div class="coverage-bar"><div class="coverage-bar-fill" id="coverage-fill" style="width:0%"></div></div>
@@ -449,7 +450,7 @@ function openSearch(){const q=prompt('Search gear inventory:');if(!q)return;cons
 function exportData(){const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jrp_gear_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);}
 function clearData(){if(confirm('Delete ALL local gear data? This cannot be undone.')){items=[];saveData();renderItems();updateDashboard();}}
 
-const APP_VERSION='v1.9';
+const APP_VERSION='v1.9.1';
 function normItem(r){const num=v=>{if(v===''||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(/[$,]/g,''));return isNaN(n)?null:n;};const day=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)?String(v):d.toISOString().split('T')[0];};return{...r,replacementValue:num(r.replacementValue)||0,purchasePrice:num(r.purchasePrice),originalMSRP:num(r.originalMSRP),currentNewValue:num(r.currentNewValue),usedMarketValue:num(r.usedMarketValue),itemAge:num(r.itemAge),usefulLife:num(r.usefulLife),enriched:r.enriched===true||String(r.enriched).toUpperCase()==='TRUE',purchaseDate:day(r.purchaseDate),dateAdded:day(r.dateAdded),lastUpdated:day(r.lastUpdated),outOfServiceDate:day(r.outOfServiceDate),status:r.status||'active',serialNumber:r.serialNumber==null?'':String(r.serialNumber)};}
 async function pullFromSheet(){const st=document.getElementById('sync-status');const url=getSettings().scriptUrl;if(!url){st.textContent='local only';return;}st.textContent='syncing...';try{const resp=await fetch(url+(url.includes('?')?'&':'?')+'action=getItems&t='+Date.now());const data=await resp.json();if(!data||!Array.isArray(data.items))throw new Error('no items');const sheet=data.items.filter(r=>r&&r.id).map(normItem);const ids=new Set(sheet.map(i=>i.id));const localOnly=items.filter(i=>!ids.has(i.id));items=sheet.concat(localOnly);saveData();updateDashboard();renderItems();localOnly.forEach(i=>syncToSheet(i));st.textContent='synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){console.log('Pull:',e.message);st.textContent='sheet pull failed';}}
 loadData();updateDashboard();renderItems();pullFromSheet();
@@ -665,6 +666,11 @@ function cardActions(it){const b=(st,l)=>'<button class="ca-btn ca-'+st+'" oncli
 let undoT=null;
 function quickMark(id,st){const it=items.find(i=>i.id===id);if(!it)return;const prev={status:it.status,outOfServiceDate:it.outOfServiceDate||'',conditionNotes:it.conditionNotes||''};setOutOfService(id,st);let t=document.getElementById('undo-toast');if(!t){t=document.createElement('div');t.id='undo-toast';document.body.appendChild(t);}t.innerHTML='<span>'+esc(it.name.slice(0,40))+(st==='active'?' is back in service':' marked '+(OOS[st]||st).toLowerCase())+'</span><button>Undo</button>';t.classList.add('show');t.querySelector('button').onclick=()=>{Object.assign(it,prev);saveData();syncToSheet(it);updateDashboard();renderItems();t.classList.remove('show');};clearTimeout(undoT);undoT=setTimeout(()=>t.classList.remove('show'),6000);}
 renderItems();
+
+// v1.9.1: dashboard counts price paid when an item has no replacement value yet
+updateDashboard=function(){const active=items.filter(i=>i.status==='active');let fromPaid=0,none=0;const total=active.reduce((s,i)=>{const rv=parseFloat(i.replacementValue)||0;if(rv)return s+rv;const pp=parseFloat(i.purchasePrice)||0;if(pp){fromPaid++;return s+pp;}none++;return s;},0);const pct=Math.min((total/COVERAGE_LIMIT)*100,100);const gap=Math.max(COVERAGE_LIMIT-total,0);const fill=document.getElementById('coverage-fill');fill.style.width=pct+'%';fill.className='coverage-bar-fill'+(total>COVERAGE_LIMIT?' over':'');document.getElementById('total-value').textContent=fmt(Math.round(total));document.getElementById('item-count').textContent=active.length;document.getElementById('needs-enrich').textContent=active.filter(i=>!i.enriched).length;document.getElementById('coverage-gap').textContent=gap>0?fmt(Math.round(gap)):'Over by '+fmt(Math.round(total-COVERAGE_LIMIT));document.getElementById('coverage-gap').className='stat-value '+(total<=COVERAGE_LIMIT?'good':'bad');document.getElementById('coverage-pct').textContent=Math.round(total/COVERAGE_LIMIT*100)+'% of $20K limit';const vb=document.getElementById('value-basis');if(vb)vb.textContent=(fromPaid?fromPaid+' item'+(fromPaid>1?'s':'')+' counted at price paid until they get a replacement value.':'')+(none?' '+none+' with no value at all.':'');
+ const yrs=i=>{if(i.itemAge)return parseFloat(i.itemAge);if(i.purchaseDate){const d=new Date(i.purchaseDate);if(!isNaN(d))return Math.max(0,(Date.now()-d)/31557600000);}return 2;};const acv=active.reduce((s,i)=>{const v=parseFloat(i.replacementValue)||parseFloat(i.purchasePrice)||0;const life=parseFloat(i.usefulLife)||USEFUL_LIFE[i.category]||5;return s+v*Math.max(0,1-yrs(i)/life);},0);document.getElementById('acv-total').textContent=fmt(Math.round(acv));};
+updateDashboard();
 </script>
 </body>
 </html>
