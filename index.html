@@ -150,9 +150,10 @@ input,select,textarea{max-width:100%;min-width:0;}
   <div class="topbar">
     <div class="topbar-logo">
       <div class="logo-mark">JRP</div>
-      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.2 &middot; <span id="sync-status">local only</span></div></div>
+      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.3 &middot; <span id="sync-status">local only</span></div></div>
     </div>
     <div class="topbar-actions">
+      <a class="icon-btn" href="https://docs.google.com/spreadsheets/d/1Cul1BwrNdRSUe80plykX0usHMw1cv-FUbvie2i-WmK8/edit" target="_blank" rel="noopener" title="Open Google Sheet" style="text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;width:auto;padding:0 10px">Sheet</a>
       <button class="icon-btn" onclick="openSearch()">🔍</button>
     </div>
   </div>
@@ -212,7 +213,7 @@ input,select,textarea{max-width:100%;min-width:0;}
       <div class="setup-notice-body">Paste your Apps Script Web App URL below. Deploy as: Execute as me, access: Anyone. All gear data syncs to your Sheet.</div>
     </div>
     <div class="field"><label>Apps Script URL</label><input type="url" id="script-url" placeholder="https://script.google.com/macros/s/..." /></div>
-    <div class="field"><label>Anthropic API Key (stored locally only)</label><input type="password" id="api-key" placeholder="sk-ant-..." /></div>
+    <div class="field"><label>Anthropic API Key (stored locally only)</label><div style="display:flex;gap:8px"><input type="password" id="api-key" placeholder="sk-ant-..." style="flex:1" /><button type="button" class="draft-btn" style="flex:none;width:72px" onclick="toggleKey(this)">Show</button></div></div>
     <button class="submit-btn" onclick="saveSettings()">Save connection</button>
     <div style="height:24px"></div>
     <div class="section-label">Insurance thresholds</div>
@@ -232,6 +233,7 @@ input,select,textarea{max-width:100%;min-width:0;}
     </div>
     <div style="height:24px"></div>
     <div class="section-label">Data</div>
+    <a class="submit-btn secondary" href="https://docs.google.com/spreadsheets/d/1Cul1BwrNdRSUe80plykX0usHMw1cv-FUbvie2i-WmK8/edit" target="_blank" rel="noopener" style="display:block;text-align:center;box-sizing:border-box;text-decoration:none;margin-bottom:8px">Open Google Sheet (Summary tab)</a>
     <label class="submit-btn secondary" style="display:block;text-align:center;box-sizing:border-box;margin-top:8px">Import receipt list (CSV)<input type="file" accept=".csv,text/csv" style="display:none" onchange="onReceiptCSV(this)"></label>
     <button class="submit-btn secondary" onclick="exportData()">Export inventory as JSON</button>
     <button class="submit-btn secondary" style="margin-top:8px;color:var(--red);" onclick="clearData()">Clear all local data</button>
@@ -240,7 +242,8 @@ input,select,textarea{max-width:100%;min-width:0;}
   <div id="screen-import" class="screen">
     <div class="section-label">Batch import</div>
     <label class="submit-btn" style="display:block;text-align:center;box-sizing:border-box">📷 Add photos<input type="file" accept="image/*" multiple style="display:none" onchange="onPhotosPicked(this)"></label>
-    <button class="submit-btn secondary" onclick="processQueue()">Process now</button>
+    <label class="submit-btn secondary" style="display:block;text-align:center;box-sizing:border-box">🧾 Add receipts (PDF or image)<input type="file" accept="image/*,application/pdf,.pdf" multiple style="display:none" onchange="onReceiptFiles(this)"></label>
+    <button class="submit-btn secondary" onclick="processQueue()">Process photos now</button>
     <div class="import-counts">
       <div class="stat-card"><div class="stat-label">Photos waiting</div><div class="stat-value" id="import-queued">0</div></div>
       <div class="stat-card"><div class="stat-label">To review</div><div class="stat-value warn" id="import-review">0</div></div>
@@ -380,7 +383,7 @@ function openSearch(){const q=prompt('Search gear inventory:');if(!q)return;cons
 function exportData(){const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jrp_gear_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);}
 function clearData(){if(confirm('Delete ALL local gear data? This cannot be undone.')){items=[];saveData();renderItems();updateDashboard();}}
 
-const APP_VERSION='v1.2';
+const APP_VERSION='v1.3';
 function normItem(r){const num=v=>{if(v===''||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(/[$,]/g,''));return isNaN(n)?null:n;};const day=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)?String(v):d.toISOString().split('T')[0];};return{...r,replacementValue:num(r.replacementValue)||0,purchasePrice:num(r.purchasePrice),originalMSRP:num(r.originalMSRP),currentNewValue:num(r.currentNewValue),usedMarketValue:num(r.usedMarketValue),itemAge:num(r.itemAge),usefulLife:num(r.usefulLife),enriched:r.enriched===true||String(r.enriched).toUpperCase()==='TRUE',purchaseDate:day(r.purchaseDate),dateAdded:day(r.dateAdded),lastUpdated:day(r.lastUpdated),outOfServiceDate:day(r.outOfServiceDate),status:r.status||'active',serialNumber:r.serialNumber==null?'':String(r.serialNumber)};}
 async function pullFromSheet(){const st=document.getElementById('sync-status');const url=getSettings().scriptUrl;if(!url){st.textContent='local only';return;}st.textContent='syncing...';try{const resp=await fetch(url+(url.includes('?')?'&':'?')+'action=getItems&t='+Date.now());const data=await resp.json();if(!data||!Array.isArray(data.items))throw new Error('no items');const sheet=data.items.filter(r=>r&&r.id).map(normItem);const ids=new Set(sheet.map(i=>i.id));const localOnly=items.filter(i=>!ids.has(i.id));items=sheet.concat(localOnly);saveData();updateDashboard();renderItems();localOnly.forEach(i=>syncToSheet(i));st.textContent='synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){console.log('Pull:',e.message);st.textContent='sheet pull failed';}}
 loadData();updateDashboard();renderItems();pullFromSheet();
@@ -437,6 +440,11 @@ async function viewPhoto(id){const p=await idbGet('photos',id);if(!p)return;cons
 const _openDetailOrig=openDetail;openDetail=function(id){_openDetailOrig(id);showItemPhotos(id);};
 const _showScreenOrig=showScreen;showScreen=function(name){_showScreenOrig(name);if(name==='import')refreshImport();};
 refreshImport().then(processQueue);
+
+// ===== v1.3: receipt PDFs and images =====
+function fileToB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+async function onReceiptFiles(input){const files=[...input.files];input.value='';if(!files.length)return;if(!getSettings().apiKey){setImportStatus('Add your Anthropic API key in Settings to read receipts.',true);return;}showScreen('import');stickyMsg='';let made=0,matched=0,failed=0;for(let i=0;i<files.length;i++){const f=files[i];setImportStatus('Reading receipt '+(i+1)+' of '+files.length+': '+f.name);try{const isPdf=f.type==='application/pdf'||/\.pdf$/i.test(f.name);const block=isPdf?{type:'document',source:{type:'base64',media_type:'application/pdf',data:await fileToB64(f)}}:{type:'image',source:{type:'base64',media_type:'image/jpeg',data:(await shrink(f,2000,0.85)).split(',')[1]}};const r=await callClaude([block,{type:'text',text:'This is a purchase receipt, invoice or order confirmation. List the physical gear items bought (cameras, lenses, lighting, audio, computers, storage, memory cards, bags, stands, cables, accessories). Skip software, gift cards, shipping, tax, protection plans, gels, tape and other consumables. Category must be one of: '+CATS.join(', ')+'. Return only JSON: {"retailer":"","orderNumber":"","date":"YYYY-MM-DD","items":[{"name":"","brand":"","model":"","category":"","qty":1,"unitPrice":null}]}'}],2000);const lines=r.items||[];for(const it of lines){const qty=Math.max(1,parseInt(it.qty)||1);for(let k=0;k<qty;k++){const src='From receipt: '+(r.retailer||f.name)+(r.orderNumber?' #'+r.orderNumber:'');const d={id:uid('dr'),source:'receipt',sourceLabel:src+(r.date?' · '+r.date:''),photoIds:[],name:(it.name||'Item')+(qty>1?' ('+(k+1)+' of '+qty+')':''),brand:it.brand||'',model:it.model||'',serialNumber:'',category:CATS.includes(it.category)?it.category:'Miscellaneous',purchaseDate:r.date||'',purchasePrice:(typeof it.unitPrice==='number')?it.unitPrice:null,notes:'Read from '+f.name,itemNotes:src+'. Needs photo.'};d.match=findMatch(d);if(d.match)matched++;await idbPut('drafts',d);made++;}}if(!lines.length)failed++;}catch(e){failed++;console.log('Receipt failed',f.name,e);}}await refreshImport();setImportStatus(made+' items read from '+files.length+' receipt'+(files.length>1?'s':'')+'. '+matched+' look like gear already in your inventory.'+(failed?' '+failed+' file'+(failed>1?'s':'')+' had no gear or could not be read.':''),true);}
+function toggleKey(btn){const el=document.getElementById('api-key');el.type=el.type==='password'?'text':'password';btn.textContent=el.type==='password'?'Show':'Hide';}
 
 </script>
 </body>
