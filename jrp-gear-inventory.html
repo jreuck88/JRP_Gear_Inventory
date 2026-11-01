@@ -132,7 +132,7 @@ input,select,textarea{max-width:100%;min-width:0;}
   <div class="topbar">
     <div class="topbar-logo">
       <div class="logo-mark">JRP</div>
-      <div><div class="logo-text">Gear Inventory</div></div>
+      <div><div class="logo-text">Gear Inventory</div><div id="app-version" style="font-size:11px;opacity:.6;margin-top:2px">v1.1 &middot; <span id="sync-status">local only</span></div></div>
     </div>
     <div class="topbar-actions">
       <button class="icon-btn" onclick="openSearch()">🔍</button>
@@ -347,7 +347,11 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 function openSearch(){const q=prompt('Search gear inventory:');if(!q)return;const results=items.filter(i=>i.name.toLowerCase().includes(q.toLowerCase())||(i.brand||'').toLowerCase().includes(q.toLowerCase())||(i.model||'').toLowerCase().includes(q.toLowerCase()));currentFilter='all';showScreen('items');const list=document.getElementById('items-list');if(results.length===0){list.innerHTML='<div class="empty-state"><div class="empty-title">No results for "'+q+'"</div></div>';return;}const orig=items;items=results;renderItems();items=orig;}
 function exportData(){const blob=new Blob([JSON.stringify(items,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jrp_gear_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);}
 function clearData(){if(confirm('Delete ALL local gear data? This cannot be undone.')){items=[];saveData();renderItems();updateDashboard();}}
-loadData();updateDashboard();renderItems();
+
+const APP_VERSION='v1.1';
+function normItem(r){const num=v=>{if(v===''||v===null||v===undefined)return null;const n=parseFloat(String(v).replace(/[$,]/g,''));return isNaN(n)?null:n;};const day=v=>{if(!v)return'';const d=new Date(v);return isNaN(d)?String(v):d.toISOString().split('T')[0];};return{...r,replacementValue:num(r.replacementValue)||0,purchasePrice:num(r.purchasePrice),originalMSRP:num(r.originalMSRP),currentNewValue:num(r.currentNewValue),usedMarketValue:num(r.usedMarketValue),itemAge:num(r.itemAge),usefulLife:num(r.usefulLife),enriched:r.enriched===true||String(r.enriched).toUpperCase()==='TRUE',purchaseDate:day(r.purchaseDate),dateAdded:day(r.dateAdded),lastUpdated:day(r.lastUpdated),outOfServiceDate:day(r.outOfServiceDate),status:r.status||'active',serialNumber:r.serialNumber==null?'':String(r.serialNumber)};}
+async function pullFromSheet(){const st=document.getElementById('sync-status');const url=getSettings().scriptUrl;if(!url){st.textContent='local only';return;}st.textContent='syncing...';try{const resp=await fetch(url+(url.includes('?')?'&':'?')+'action=getItems&t='+Date.now());const data=await resp.json();if(!data||!Array.isArray(data.items))throw new Error('no items');const sheet=data.items.filter(r=>r&&r.id).map(normItem);const ids=new Set(sheet.map(i=>i.id));const localOnly=items.filter(i=>!ids.has(i.id));items=sheet.concat(localOnly);saveData();updateDashboard();renderItems();localOnly.forEach(i=>syncToSheet(i));st.textContent='synced '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});}catch(e){console.log('Pull:',e.message);st.textContent='sheet pull failed';}}
+loadData();updateDashboard();renderItems();pullFromSheet();
 </script>
 </body>
 </html>
